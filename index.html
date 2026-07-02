@@ -30,16 +30,24 @@ var _origGSR=makeGSR;
 Object.defineProperty(google.script,'run',{get:function(){return makeGSR();}});
 
 function call(action,params,onOk,onFail){
-  if(!SCRIPT_URL||SCRIPT_URL= 'https://script.google.com/a/macros/flipkart.com/s/AKfycbxvv8QyIU9jlGY1qBpp95DOOWGBAXSVswitrgmeTqQLm9Q4B2Q02FoF6Ow1Zhr1nszR/exec'){
+  if(!SCRIPT_URL||SCRIPT_URL==='YOUR_APPS_SCRIPT_URL_HERE'){
     alert('Please set your SCRIPT_URL in the HTML file first!');return;
   }
-  fetch(SCRIPT_URL+'?action='+action,{
-    method:'POST',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify(params)
+  // Use GET with encoded params — avoids CORS preflight
+  var qs='?action='+encodeURIComponent(action)+'&params='+encodeURIComponent(JSON.stringify(params));
+  fetch(SCRIPT_URL+qs,{
+    method:'GET',
+    redirect:'follow'
   })
-  .then(function(r){return r.json();})
-  .then(function(d){if(onOk)onOk(d);})
+  .then(function(r){return r.text();})
+  .then(function(t){
+    try{
+      var d=JSON.parse(t);
+      if(onOk)onOk(d);
+    }catch(e){
+      if(onFail)onFail({message:'Invalid response: '+t.substring(0,100)});
+    }
+  })
   .catch(function(e){if(onFail)onFail(e);else console.error(e);});
 }
 </script>
