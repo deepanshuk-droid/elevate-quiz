@@ -1,506 +1,1515 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Project ELEVATE — Knowledge Quiz | Flipkart</title>
+<title>Project ELEVATE Quiz</title>
+<script>
+// ================================================================
+// STEP 1: Paste your Apps Script Web App URL below
+// Deploy Code.gs → Deploy → New Deployment → Web App → Copy URL
+// ================================================================
+var SCRIPT_URL = 'https://script.google.com/a/macros/flipkart.com/s/AKfycbxvv8QyIU9jlGY1qBpp95DOOWGBAXSVswitrgmeTqQLm9Q4B2Q02FoF6Ow1Zhr1nszR/exec';
+// ================================================================
+
+// google.script.run polyfill for standalone use
+var google={script:{run:makeGSR()}};
+function makeGSR(){
+  var o={_ok:null,_fail:null};
+  o.withSuccessHandler=function(f){this._ok=f;return this;};
+  o.withFailureHandler=function(f){this._fail=f;return this;};
+  o.checkAttempted=function(id){call('checkAttempted',{empId:id},this._ok,this._fail);};
+  o.saveResult=function(d){call('saveResult',d,this._ok,this._fail);};
+  o.getReport=function(p){call('getReport',{pwd:p},this._ok,this._fail);};
+  o.savePhoto=function(id,nm,hb,ph){call('savePhoto',{empId:id,name:nm,hub:hb,photo:ph},this._ok,this._fail);};
+  o.getUrl=function(){if(this._ok)this._ok(SCRIPT_URL);};
+  return o;
+}
+// Rebuild google.script.run each time (needed for chaining)
+var _origGSR=makeGSR;
+Object.defineProperty(google.script,'run',{get:function(){return makeGSR();}});
+
+function call(action,params,onOk,onFail){
+  if(!SCRIPT_URL||SCRIPT_URL==='YOUR_APPS_SCRIPT_URL_HERE'){
+    alert('Please set your SCRIPT_URL in the HTML file first!');return;
+  }
+  fetch(SCRIPT_URL+'?action='+action,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify(params)
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){if(onOk)onOk(d);})
+  .catch(function(e){if(onFail)onFail(e);else console.error(e);});
+}
+</script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Arial,sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 12px}
-.container{background:#fff;border-radius:16px;width:100%;max-width:620px;overflow:hidden;border:1px solid #e0e0e0}
-.screen{display:none;padding:28px 24px}
-.screen.active{display:block}
-
-/* REGISTER */
-.reg-logo{width:60px;height:60px;border-radius:14px;background:#F77F00;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;margin:0 auto 14px}
-.reg-title{font-size:20px;font-weight:700;color:#111;text-align:center;margin-bottom:4px}
-.reg-sub{font-size:13px;color:#888;text-align:center;margin-bottom:22px}
-.field-label{font-size:12px;font-weight:700;color:#555;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
-.field-wrap{margin-bottom:14px}
-.field-input{width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;color:#111;outline:none;background:#fff}
-.field-input:focus{border-color:#F77F00}
-.err-msg{font-size:12px;color:#cc3333;margin-top:4px;display:none}
-.btn-register{background:#F77F00;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-top:6px}
-.btn-register:hover{background:#e07000}
-.admin-link{text-align:center;margin-top:14px;font-size:12px;color:#bbb;cursor:pointer}
-.admin-link:hover{color:#888}
-
-/* START */
-.start-inner{text-align:center}
-.game-logo{width:64px;height:64px;border-radius:16px;background:#F77F00;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;margin:0 auto 14px}
-.game-title{font-size:22px;font-weight:700;color:#111;margin-bottom:4px}
-.game-badge{font-size:12px;font-weight:700;color:#F77F00;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.game-sub{font-size:14px;color:#666;margin-bottom:20px;line-height:1.6}
-.player-card{background:#fff8f0;border:1px solid #ffd8a8;border-radius:10px;padding:12px 16px;margin-bottom:20px;text-align:left;font-size:13px;color:#555;line-height:1.8}
-.player-card strong{color:#111}
-.start-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
-.stat-box{background:#f9f9f9;border:1px solid #e8e8e8;border-radius:10px;padding:14px 8px;text-align:center}
-.stat-num{font-size:22px;font-weight:700;color:#F77F00}
-.stat-lbl{font-size:11px;color:#999;margin-top:3px}
-.btn-start{background:#F77F00;color:#fff;border:none;border-radius:10px;padding:14px 40px;font-size:16px;font-weight:700;cursor:pointer;width:100%}
-.btn-start:hover{background:#e07000}
-
-/* QUIZ */
-.top-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.progress-wrap{flex:1;height:7px;background:#f0f0f0;border-radius:4px;overflow:hidden}
-.progress-fill{height:100%;background:#F77F00;border-radius:4px;transition:width 0.4s}
-.q-counter{font-size:12px;color:#999;white-space:nowrap}
-.timer-box{background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:5px 12px;font-size:14px;font-weight:700;color:#333;min-width:54px;text-align:center}
-.timer-box.warn{background:#fff0f0;border-color:#ffb3b3;color:#cc0000}
-.mod-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:10px}
-.t-loss{background:#fff0f0;color:#cc3333}
-.t-cx{background:#e8f0ff;color:#1a56db}
-.t-rel{background:#eafaee;color:#1a7f4b}
-.q-text{font-size:15px;font-weight:700;color:#111;line-height:1.55;margin-bottom:18px;min-height:50px}
-.options-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
-.opt-btn{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;border:1.5px solid #e0e0e0;font-size:13px;color:#444;cursor:pointer;background:#fff;text-align:left;width:100%;line-height:1.5;transition:all 0.15s}
-.opt-btn:hover:not([disabled]){border-color:#aaa;background:#fafafa}
-.opt-key{font-weight:700;color:#999;min-width:20px;flex-shrink:0;margin-top:1px}
-
-@keyframes blinkGreen{0%{background:#eafaee;border-color:#5cb85c}50%{background:#b6f0c2;border-color:#2e9e4f}100%{background:#eafaee;border-color:#5cb85c}}
-@keyframes blinkRed{0%{background:#fff0f0;border-color:#e05c5c}50%{background:#ffc8c8;border-color:#cc1111}100%{background:#fff0f0;border-color:#e05c5c}}
-.opt-btn.correct{animation:blinkGreen 0.4s ease 3;background:#eafaee;border-color:#5cb85c;color:#1a7f4b}
-.opt-btn.correct .opt-key{color:#1a7f4b}
-.opt-btn.wrong{animation:blinkRed 0.4s ease 3;background:#fff0f0;border-color:#e05c5c;color:#cc3333}
-.opt-btn.wrong .opt-key{color:#cc3333}
-
-.next-btn{background:#F77F00;color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;width:100%}
-.next-btn:hover:not([disabled]){background:#e07000}
-.next-btn:disabled{background:#e8e8e8;color:#aaa;cursor:default}
-
-/* RESULT */
-.result-inner{text-align:center}
-.trophy{font-size:52px;margin-bottom:12px}
-.result-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
-.result-sub{font-size:14px;color:#666;margin-bottom:20px;line-height:1.5}
-.score-big{font-size:52px;font-weight:700;color:#F77F00;line-height:1}
-.score-label{font-size:13px;color:#999;margin-bottom:20px;margin-top:4px}
-.result-mini{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
-.rm-box{background:#f9f9f9;border:1px solid #e8e8e8;border-radius:10px;padding:14px 8px;text-align:center}
-.rm-val{font-size:22px;font-weight:700}
-.rm-lbl{font-size:11px;color:#999;margin-top:3px}
-.badge-row{display:flex;justify-content:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
-.badge{font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px}
-.b-gold{background:#fff8e0;color:#9a6800;border:1px solid #f5d06b}
-.b-green{background:#eafaee;color:#1a7f4b;border:1px solid #a5d6a7}
-.b-blue{background:#e8f0ff;color:#1a56db;border:1px solid #90caf9}
-.replay-btn{background:#f0f0f0;color:#555;border:none;border-radius:10px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px}
-.replay-btn:hover{background:#e0e0e0}
-
-/* ADMIN */
-.admin-inner{}
-.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.admin-title{font-size:18px;font-weight:700;color:#111}
-.admin-close{font-size:12px;color:#F77F00;cursor:pointer;border:1px solid #F77F00;border-radius:6px;padding:4px 10px}
-.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
-.sum-box{background:#f9f9f9;border:1px solid #e8e8e8;border-radius:10px;padding:12px 8px;text-align:center}
-.sum-val{font-size:20px;font-weight:700;color:#F77F00}
-.sum-lbl{font-size:11px;color:#999;margin-top:2px}
-.section-head{font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
-.tbl-wrap{overflow-x:auto;margin-bottom:20px}
-table{width:100%;border-collapse:collapse;font-size:12px;min-width:480px}
-th{background:#f5f5f5;padding:8px 10px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #e0e0e0;white-space:nowrap}
-td{padding:8px 10px;border-bottom:1px solid #f0f0f0;color:#333;vertical-align:top}
-tr:hover td{background:#fafafa}
-.grade-pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
-.g-a{background:#eafaee;color:#1a7f4b}
-.g-b{background:#e8f0ff;color:#1a56db}
-.g-c{background:#fff8e0;color:#9a6800}
-.g-d{background:#fff0f0;color:#cc3333}
-.export-btn{background:#111;color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-bottom:8px}
-.export-btn:hover{background:#333}
-.clear-btn{background:#fff0f0;color:#cc3333;border:1px solid #ffb3b3;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%}
-.clear-btn:hover{background:#ffe0e0}
-
-/* ADMIN LOGIN */
-.admin-login-wrap{padding:28px 24px;text-align:center}
-.al-title{font-size:18px;font-weight:700;color:#111;margin-bottom:6px}
-.al-sub{font-size:13px;color:#888;margin-bottom:20px}
-.al-input{width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;color:#111;outline:none;margin-bottom:10px;text-align:center;letter-spacing:4px}
-.al-input:focus{border-color:#111}
-.al-btn{background:#111;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-bottom:8px}
-.al-btn:hover{background:#333}
-.al-cancel{font-size:12px;color:#bbb;cursor:pointer;margin-top:6px;display:block}
-.al-err{font-size:12px;color:#cc3333;margin-bottom:8px;display:none}
-
-.fk-footer{text-align:center;padding:12px;border-top:1px solid #f0f0f0;font-size:11px;color:#ccc}
-.empty-state{text-align:center;padding:32px;color:#bbb;font-size:13px}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, sans-serif; background: #f0f0f0; min-height: 100vh; padding: 20px 12px; display: flex; justify-content: center; }
+.wrap { background: #fff; border-radius: 14px; width: 100%; max-width: 580px; border: 1px solid #ddd; overflow: hidden; height: fit-content; }
+.pg { display: none; padding: 26px 22px; }
+.pg.on { display: block; }
+.logo { width: 56px; height: 56px; border-radius: 12px; background: #F77F00; color: #fff; font-size: 22px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+.h1 { font-size: 20px; font-weight: 700; color: #111; text-align: center; margin-bottom: 4px; }
+.h2 { font-size: 13px; color: #888; text-align: center; margin-bottom: 20px; }
+.lbl { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+.fw { margin-bottom: 14px; }
+.inp { width: 100%; padding: 11px 13px; border: 1.5px solid #ddd; border-radius: 9px; font-size: 14px; color: #111; outline: none; background: #fff; }
+.inp:focus { border-color: #F77F00; }
+.err { font-size: 12px; color: #c33; margin-top: 4px; display: none; padding: 5px 9px; background: #fff0f0; border-radius: 6px; }
+.btn { width: 100%; padding: 13px; border: none; border-radius: 9px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 6px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.o { background: #F77F00; color: #fff; }
+.o:hover:not(:disabled) { background: #e07000; }
+.g { background: #eee; color: #444; }
+.g:hover { background: #ddd; }
+.w { background: #fff; color: #333; border: 1.5px solid #ccc; }
+.w:hover { background: #f5f5f5; }
+.dk { background: #111; color: #fff; }
+.dk:hover { background: #333; }
+.gn { background: #1a7f4b; color: #fff; }
+.gn:hover { background: #145e38; }
+.acts { display: flex; flex-direction: column; gap: 9px; margin-top: 16px; }
+.admlnk { text-align: center; font-size: 12px; color: #bbb; cursor: pointer; margin-top: 14px; }
+.admlnk:hover { color: #888; }
+.pcrd { background: #fff8f0; border: 1px solid #ffd8a8; border-radius: 9px; padding: 12px 14px; font-size: 13px; color: #555; line-height: 1.9; margin-bottom: 18px; }
+.pcrd b { color: #111; }
+.stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 22px; }
+.stat { background: #f9f9f9; border: 1px solid #eee; border-radius: 9px; padding: 13px 8px; text-align: center; }
+.sn { font-size: 22px; font-weight: 700; color: #F77F00; }
+.sl { font-size: 11px; color: #999; margin-top: 2px; }
+.topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.pw { flex: 1; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+.pf { height: 100%; background: #F77F00; border-radius: 3px; transition: width .4s; }
+.qn { font-size: 12px; color: #999; white-space: nowrap; }
+.tm { background: #f5f5f5; border: 1px solid #ddd; border-radius: 7px; padding: 5px 11px; font-size: 14px; font-weight: 700; color: #333; min-width: 50px; text-align: center; }
+.tm.red { background: #fff0f0; border-color: #fbb; color: #c00; }
+.tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 3px 9px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
+.tL { background: #fff0f0; color: #c33; }
+.tC { background: #e8f0ff; color: #1a56db; }
+.tR { background: #eafaee; color: #1a7f4b; }
+.qt { font-size: 15px; font-weight: 700; color: #111; line-height: 1.55; margin-bottom: 16px; min-height: 46px; }
+.og { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.ob { display: flex; align-items: flex-start; gap: 9px; padding: 11px 13px; border-radius: 9px; border: 1.5px solid #ddd; font-size: 13px; color: #444; cursor: pointer; background: #fff; text-align: left; width: 100%; line-height: 1.45; }
+.ob:hover:not(:disabled) { border-color: #aaa; background: #fafafa; }
+.ok { font-weight: 700; color: #999; min-width: 18px; flex-shrink: 0; margin-top: 1px; }
+@keyframes bG { 0%,100%{background:#eafaee;border-color:#5cb85c} 50%{background:#b6f0c2;border-color:#2e9e4f} }
+@keyframes bR { 0%,100%{background:#fff0f0;border-color:#e05c5c} 50%{background:#ffc8c8;border-color:#c11} }
+.ob.okc { animation: bG .45s ease 3; background: #eafaee; border-color: #5cb85c; color: #1a7f4b; }
+.ob.okc .ok { color: #1a7f4b; }
+.ob.okw { animation: bR .45s ease 3; background: #fff0f0; border-color: #e05c5c; color: #c33; }
+.ob.okw .ok { color: #c33; }
+.nb { background: #F77F00; color: #fff; border: none; border-radius: 9px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; width: 100%; }
+.nb:hover:not(:disabled) { background: #e07000; }
+.nb:disabled { background: #e0e0e0; color: #aaa; cursor: default; }
+.ri { text-align: center; }
+.trph { font-size: 52px; margin-bottom: 10px; }
+.rtl { font-size: 22px; font-weight: 700; color: #111; margin-bottom: 6px; }
+.rsb { font-size: 14px; color: #666; margin-bottom: 18px; line-height: 1.5; }
+.rbg { font-size: 52px; font-weight: 700; color: #F77F00; }
+.rll { font-size: 13px; color: #999; margin: 4px 0 18px; }
+.rmn { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.rbox { background: #f9f9f9; border: 1px solid #eee; border-radius: 9px; padding: 14px 8px; text-align: center; }
+.rv { font-size: 22px; font-weight: 700; }
+.rl { font-size: 11px; color: #999; margin-top: 3px; }
+.bdgs { display: flex; justify-content: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.bdg { font-size: 12px; font-weight: 700; padding: 5px 13px; border-radius: 20px; }
+.bdg.bg { background: #fff8e0; color: #9a6800; border: 1px solid #f5d06b; }
+.bdg.bb { background: #eafaee; color: #1a7f4b; border: 1px solid #a5d6a7; }
+.bdg.bc { background: #e8f0ff; color: #1a56db; border: 1px solid #90caf9; }
+.alb { text-align: center; }
+.ali { font-size: 48px; margin-bottom: 12px; }
+.alt { font-size: 20px; font-weight: 700; color: #c33; margin-bottom: 8px; }
+.alm { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 16px; }
+.alx { background: #fff0f0; border: 1px solid #fbb; border-radius: 9px; padding: 13px; font-size: 13px; color: #555; text-align: left; margin-bottom: 16px; line-height: 1.9; }
+.alx b { color: #111; }
+.alw { text-align: center; }
+.aip { width: 100%; padding: 11px 13px; border: 1.5px solid #ddd; border-radius: 9px; font-size: 15px; color: #111; outline: none; text-align: center; letter-spacing: 4px; margin-bottom: 10px; }
+.aip:focus { border-color: #111; }
+.ae { font-size: 12px; color: #c33; display: none; background: #fff0f0; padding: 7px 10px; border-radius: 6px; margin-bottom: 9px; }
+.ac { font-size: 12px; color: #bbb; cursor: pointer; margin-top: 10px; display: block; }
+.ah { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.at { font-size: 18px; font-weight: 700; color: #111; }
+.ax { font-size: 12px; color: #F77F00; cursor: pointer; border: 1px solid #F77F00; border-radius: 6px; padding: 4px 9px; }
+.sg { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 16px; }
+.sb { background: #f9f9f9; border: 1px solid #eee; border-radius: 9px; padding: 12px 8px; text-align: center; }
+.sv { font-size: 18px; font-weight: 700; color: #F77F00; }
+.sk { font-size: 10px; color: #999; margin-top: 2px; }
+.sh { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.tw { overflow-x: auto; margin-bottom: 12px; max-height: 300px; overflow-y: auto; border: 1px solid #f0f0f0; border-radius: 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 440px; }
+th { background: #f5f5f5; padding: 8px 10px; text-align: left; font-weight: 700; color: #555; border-bottom: 2px solid #ddd; white-space: nowrap; position: sticky; top: 0; }
+td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; color: #333; white-space: nowrap; vertical-align: middle; }
+tr:hover td { background: #fafafa; }
+.gp { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+.ga { background: #eafaee; color: #1a7f4b; }
+.gb { background: #e8f0ff; color: #1a56db; }
+.gc { background: #fff8e0; color: #9a6800; }
+.gd { background: #fff0f0; color: #c33; }
+.note { background: #e8f0ff; border: 1px solid #90caf9; border-radius: 7px; padding: 9px 12px; font-size: 12px; color: #1a56db; margin-bottom: 12px; line-height: 1.5; }
+.empty { text-align: center; padding: 28px; color: #bbb; font-size: 13px; }
+/* Camera styles */
+.cam-wrap{text-align:center}
+.cam-box{position:relative;width:100%;max-width:340px;margin:0 auto 14px;border-radius:12px;overflow:hidden;border:3px solid #F77F00;background:#000}
+#cam-video{width:100%;display:block;border-radius:9px}
+#cam-canvas{display:none}
+.cam-snap{background:#F77F00;color:#fff;border:none;border-radius:50%;width:60px;height:60px;font-size:26px;cursor:pointer;margin:0 auto 12px;display:block;box-shadow:0 4px 12px rgba(247,127,0,0.4)}
+.cam-snap:hover{background:#e07000}
+.cam-preview{width:100%;max-width:340px;border-radius:12px;border:3px solid #1a7f4b;display:none;margin:0 auto 14px}
+.retake-btn{background:#eee;color:#555;border:none;border-radius:9px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-bottom:8px}
+.retake-btn:hover{background:#ddd}
+.ftr { text-align: center; padding: 12px; border-top: 1px solid #f0f0f0; font-size: 11px; color: #ccc; }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
 
-  <!-- REGISTER SCREEN -->
-  <div class="screen active" id="reg-screen">
-    <div class="reg-logo">FK</div>
-    <div class="reg-title">Project ELEVATE</div>
-    <div class="reg-sub">Enter your details to start the quiz</div>
-
-    <div class="field-wrap">
-      <div class="field-label">Employee ID</div>
-      <input class="field-input" id="reg-id" type="text" placeholder="e.g. EMP12345" maxlength="20">
-      <div class="err-msg" id="err-id">Please enter your Employee ID</div>
-    </div>
-    <div class="field-wrap">
-      <div class="field-label">Full Name</div>
-      <input class="field-input" id="reg-name" type="text" placeholder="e.g. Rahul Kumar" maxlength="50">
-      <div class="err-msg" id="err-name">Please enter your name</div>
-    </div>
-    <div class="field-wrap">
-      <div class="field-label">Hub Name</div>
-      <input class="field-input" id="reg-hub" type="text" placeholder="e.g. MidnaporeHub_MDN" maxlength="50">
-      <div class="err-msg" id="err-hub">Please enter your hub name</div>
-    </div>
-
-    <button class="btn-register" onclick="registerUser()">Proceed to Quiz</button>
-    <div class="admin-link" onclick="showAdminLogin()">Admin Access</div>
-  </div>
-
-  <!-- START SCREEN -->
-  <div class="screen" id="start-screen">
-    <div class="start-inner">
-      <div class="game-logo">FK</div>
-      <div class="game-title">Project ELEVATE</div>
-      <div class="game-badge">Knowledge Quiz</div>
-      <div class="game-sub">15 questions on Loss, Customer Experience and Reliability.<br>20 seconds per question. Good luck!</div>
-      <div class="player-card" id="player-card"></div>
-      <div class="start-stats">
-        <div class="stat-box"><div class="stat-num">15</div><div class="stat-lbl">Questions</div></div>
-        <div class="stat-box"><div class="stat-num">20s</div><div class="stat-lbl">Per question</div></div>
-        <div class="stat-box"><div class="stat-num">3</div><div class="stat-lbl">Modules</div></div>
+  <!-- REGISTER -->
+  <div class="pg on" id="p-reg">
+    <div class="logo">FK</div>
+    <div class="h1">Project ELEVATE</div>
+    <div class="h2">Enter your details to begin the quiz</div>
+    <div class="fw"><div class="lbl">Employee ID</div><input class="inp" id="f-id" type="text" placeholder="e.g. EMP12345" maxlength="20"><div class="err" id="e-id"></div></div>
+    <div class="fw"><div class="lbl">Full Name</div><input class="inp" id="f-nm" type="text" placeholder="e.g. Rahul Kumar" maxlength="50"><div class="err" id="e-nm"></div></div>
+    <div class="fw">
+      <div class="lbl">Hub Name</div>
+      <input class="inp" id="f-hb-search" type="text" placeholder="Type to search hub..." oninput="filterHubs(this.value)" onclick="showDrop()" autocomplete="off" style="margin-bottom:4px">
+      <div id="hub-drop" style="display:none;max-height:180px;overflow-y:auto;border:1.5px solid #F77F00;border-radius:9px;background:#fff;z-index:100;position:relative">
+        <select id="f-hb" size="6" style="width:100%;border:none;outline:none;font-size:13px;padding:4px 0;cursor:pointer" onchange="selectHub(this.value)">
+          <option value="">-- Select Hub --</option>
+<option value="AdityapurHub_IXW">AdityapurHub_IXW</option>
+<option value="AdraHub_ADR">AdraHub_ADR</option>
+<option value="AdraSplitHub_ADR">AdraSplitHub_ADR</option>
+<option value="AizawlSplitHub_AJL">AizawlSplitHub_AJL</option>
+<option value="AlgarahMDH_ALG">AlgarahMDH_ALG</option>
+<option value="AlipurduarHub_ADP">AlipurduarHub_ADP</option>
+<option value="AmaonbaraonHub_ABN">AmaonbaraonHub_ABN</option>
+<option value="AmawanPalaceHub_BSF">AmawanPalaceHub_BSF</option>
+<option value="AmbikaKalnaHub_ABK">AmbikaKalnaHub_ABK</option>
+<option value="AmnourHub_CPR">AmnourHub_CPR</option>
+<option value="AndarHub_SWN">AndarHub_SWN</option>
+<option value="AngulHub_ANG">AngulHub_ANG</option>
+<option value="AnishabadHub_PAT">AnishabadHub_PAT</option>
+<option value="ArariaHub_ARR">ArariaHub_ARR</option>
+<option value="ArerajHub_MTI">ArerajHub_MTI</option>
+<option value="ArrahHub_ARH">ArrahHub_ARH</option>
+<option value="ArrahSplitHub_ARH">ArrahSplitHub_ARH</option>
+<option value="AsansolHub_ASN">AsansolHub_ASN</option>
+<option value="AshokNagarHub_PAT">AshokNagarHub_PAT</option>
+<option value="AtriHub_GAY">AtriHub_GAY</option>
+<option value="AurangabadBiharHub_AWB">AurangabadBiharHub_AWB</option>
+<option value="AzaraHub_GAU">AzaraHub_GAU</option>
+<option value="BAHALDAHUB_BHL">BAHALDAHUB_BHL</option>
+<option value="BAISINGAHUB_BSG">BAISINGAHUB_BSG</option>
+<option value="BENIPURSplitHUB_BPA">BENIPURSplitHUB_BPA</option>
+<option value="BITMesraHub_IXR">BITMesraHub_IXR</option>
+<option value="BacchawaraHub_BCA">BacchawaraHub_BCA</option>
+<option value="BadambaHub_BBI">BadambaHub_BBI</option>
+<option value="BadekilepalMDH_BDK">BadekilepalMDH_BDK</option>
+<option value="BadmalHub_JSG">BadmalHub_JSG</option>
+<option value="BaghaHub_BGH">BaghaHub_BGH</option>
+<option value="BagmundiMDH_BPR">BagmundiMDH_BPR</option>
+<option value="BaileyRoadHub_PAT">BaileyRoadHub_PAT</option>
+<option value="BaishnabNagarMDH_NFK">BaishnabNagarMDH_NFK</option>
+<option value="BajkulHub_BKL">BajkulHub_BKL</option>
+<option value="BakhriHub_BKH">BakhriHub_BKH</option>
+<option value="BalagaonHub_BLG">BalagaonHub_BLG</option>
+<option value="BaleshwarHub_BAW">BaleshwarHub_BAW</option>
+<option value="BalikudaHub_BBI">BalikudaHub_BBI</option>
+<option value="BaliparaHub_TZR">BaliparaHub_TZR</option>
+<option value="BalliaHub_BLL">BalliaHub_BLL</option>
+<option value="BalodHub_BAL">BalodHub_BAL</option>
+<option value="BalrampurHub_BAP">BalrampurHub_BAP</option>
+<option value="BalugaonHub_BAL">BalugaonHub_BAL</option>
+<option value="BanarhatMDH_BNR">BanarhatMDH_BNR</option>
+<option value="BandelHub_BND">BandelHub_BND</option>
+<option value="BangaliparaHub_BGL">BangaliparaHub_BGL</option>
+<option value="BankaHub_BAK">BankaHub_BAK</option>
+<option value="BankiPoreHub_PAT">BankiPoreHub_PAT</option>
+<option value="BankraMDH_KOL">BankraMDH_KOL</option>
+<option value="BankuraHub_BKR">BankuraHub_BKR</option>
+<option value="BanmankhiHub_BNK">BanmankhiHub_BNK</option>
+<option value="BarachattiHub_GAY">BarachattiHub_GAY</option>
+<option value="BarasatHub_KOL">BarasatHub_KOL</option>
+<option value="BarasatMDH_BAR">BarasatMDH_BAR</option>
+<option value="BarauliHub_BRL">BarauliHub_BRL</option>
+<option value="BarauniHub_BJU">BarauniHub_BJU</option>
+<option value="BarbilHub_BBN">BarbilHub_BBN</option>
+<option value="BargarhHub_BRG">BargarhHub_BRG</option>
+<option value="BarhHub_BRH">BarhHub_BRH</option>
+<option value="BarhariyaHub_SWN">BarhariyaHub_SWN</option>
+<option value="BarhiHub_HZB">BarhiHub_HZB</option>
+<option value="BariatuHub_IXR">BariatuHub_IXR</option>
+<option value="BaripadaHub_BPO">BaripadaHub_BPO</option>
+<option value="BarjoraHub_DGP">BarjoraHub_DGP</option>
+<option value="BarpetaHub_BPR">BarpetaHub_BPR</option>
+<option value="BarrackporeHub_KOL">BarrackporeHub_KOL</option>
+<option value="BasudevpurHub_BAW">BasudevpurHub_BAW</option>
+<option value="BegunipadaHub_BPD">BegunipadaHub_BPD</option>
+<option value="BegusaraiHub_BGI">BegusaraiHub_BGI</option>
+<option value="BehalaHub_KOL">BehalaHub_KOL</option>
+<option value="BeheaHub_ARH">BeheaHub_ARH</option>
+<option value="BeldaHub_BLD">BeldaHub_BLD</option>
+<option value="BelgachiaODH_KOL">BelgachiaODH_KOL</option>
+<option value="BelghariaHub_KOL">BelghariaHub_KOL</option>
+<option value="Belonia1Hub_BLN">Belonia1Hub_BLN</option>
+<option value="BelpharHub_JSG">BelpharHub_JSG</option>
+<option value="BeltolaHub_GAU">BeltolaHub_GAU</option>
+<option value="BenipurHub_BPA">BenipurHub_BPA</option>
+<option value="BerhampurHub_BMP">BerhampurHub_BMP</option>
+<option value="BettiahHub_BTH">BettiahHub_BTH</option>
+<option value="BettiahSplitHub_BTH">BettiahSplitHub_BTH</option>
+<option value="BhabuaHub_BBU">BhabuaHub_BBU</option>
+<option value="BhadrakHub_BHC">BhadrakHub_BHC</option>
+<option value="BhagabanpurHub_MDN">BhagabanpurHub_MDN</option>
+<option value="BhagalpurHub_BGP">BhagalpurHub_BGP</option>
+<option value="BhagalpurSplitHub_BGP">BhagalpurSplitHub_BGP</option>
+<option value="BhagwanpurHub_BNR">BhagwanpurHub_BNR</option>
+<option value="BhasmaMDH_SDG">BhasmaMDH_SDG</option>
+<option value="BhawanipatnaHub_BWP">BhawanipatnaHub_BWP</option>
+<option value="BhawanipurHub_KOL">BhawanipurHub_KOL</option>
+<option value="BhilaiHub_BIA">BhilaiHub_BIA</option>
+<option value="BhograiHub_JER">BhograiHub_JER</option>
+<option value="BhoreHub_GOG">BhoreHub_GOG</option>
+<option value="BhubaneswarHub_BBI">BhubaneswarHub_BBI</option>
+<option value="BiharSharifHub_BSF">BiharSharifHub_BSF</option>
+<option value="BihariganjHub_DMH">BihariganjHub_DMH</option>
+<option value="BihpurHub_THB">BihpurHub_THB</option>
+<option value="BihtaHub_PAT">BihtaHub_PAT</option>
+<option value="BijanbariMDH_BJN">BijanbariMDH_BJN</option>
+<option value="BijapurMDH_BIJ">BijapurMDH_BIJ</option>
+<option value="BijepurHub_BRG">BijepurHub_BRG</option>
+<option value="BijniHub_BJF">BijniHub_BJF</option>
+<option value="BijoynagarMDH_GAU">BijoynagarMDH_GAU</option>
+<option value="BikramganjHub_BKJ">BikramganjHub_BKJ</option>
+<option value="Bishalgarh1Hub_BGH">Bishalgarh1Hub_BGH</option>
+<option value="BiswanathCharialiHub_VNE">BiswanathCharialiHub_VNE</option>
+<option value="Boiparigudahub_BPG">Boiparigudahub_BPG</option>
+<option value="BokajanHub_SZR">BokajanHub_SZR</option>
+<option value="BokakhatHub_GLG">BokakhatHub_GLG</option>
+<option value="BokaroHub_BKO">BokaroHub_BKO</option>
+<option value="BokoHub_BKO">BokoHub_BKO</option>
+<option value="BolangirHub_BLG">BolangirHub_BLG</option>
+<option value="BolpurHub_BHP">BolpurHub_BHP</option>
+<option value="BongaigaonHub_BGG">BongaigaonHub_BGG</option>
+<option value="BoraiMDH_BRI">BoraiMDH_BRI</option>
+<option value="BoudhHub_BDH">BoudhHub_BDH</option>
+<option value="BrahmpurHub_BRH">BrahmpurHub_BRH</option>
+<option value="BudbudHub_BDM">BudbudHub_BDM</option>
+<option value="BugudaHub_GAM">BugudaHub_GAM</option>
+<option value="BulbulchandiMDH_LDA">BulbulchandiMDH_LDA</option>
+<option value="BuxarHub_BXR">BuxarHub_BXR</option>
+<option value="CABTFancyBazaarODH_GAU">CABTFancyBazaarODH_GAU</option>
+<option value="CABTHowrahODH_KOL">CABTHowrahODH_KOL</option>
+<option value="CABTJamshedpurODH_IXW">CABTJamshedpurODH_IXW</option>
+<option value="CABTMaidanODH_KOL">CABTMaidanODH_KOL</option>
+<option value="CABTMurshidabadODH_MBB">CABTMurshidabadODH_MBB</option>
+<option value="CacharHub_IXS">CacharHub_IXS</option>
+<option value="ChabuaHub_CHB">ChabuaHub_CHB</option>
+<option value="ChaibasaHub_CBS">ChaibasaHub_CBS</option>
+<option value="ChakiaHub_CAA">ChakiaHub_CAA</option>
+<option value="ChalangudaHub_CGA">ChalangudaHub_CGA</option>
+<option value="ChalsaMDH_CHL">ChalsaMDH_CHL</option>
+<option value="ChampahatiMDH_CHT">ChampahatiMDH_CHT</option>
+<option value="ChampasariMDH_CHP">ChampasariMDH_CHP</option>
+<option value="ChanchalHub_CHC">ChanchalHub_CHC</option>
+<option value="ChandannagarHub_CNR">ChandannagarHub_CNR</option>
+<option value="ChandilHub_CNI">ChandilHub_CNI</option>
+<option value="ChandraSekharpurHub_BBI">ChandraSekharpurHub_BBI</option>
+<option value="ChandrakonaHub_CDR">ChandrakonaHub_CDR</option>
+<option value="ChapakhowaHub_CPK">ChapakhowaHub_CPK</option>
+<option value="ChapraHub_CPR">ChapraHub_CPR</option>
+<option value="ChapraMDH_CHA">ChapraMDH_CHA</option>
+<option value="ChasHub_BKO">ChasHub_BKO</option>
+<option value="ChatraHub_CTR">ChatraHub_CTR</option>
+<option value="ChausaHub_CSA">ChausaHub_CSA</option>
+<option value="ChhatrapurHub_CAP">ChhatrapurHub_CAP</option>
+<option value="ChinarParkHub_KOL">ChinarParkHub_KOL</option>
+<option value="ChitrapurHub_RMT">ChitrapurHub_RMT</option>
+<option value="ConnectIndiaNewTownSplitODH_KOL">ConnectIndiaNewTownSplitODH_KOL</option>
+<option value="ContaiHub_CNT">ContaiHub_CNT</option>
+<option value="CossipurMDH_KOL">CossipurMDH_KOL</option>
+<option value="CuttackCDAHUB_CTC">CuttackCDAHUB_CTC</option>
+<option value="CuttackHub_BBI">CuttackHub_BBI</option>
+<option value="DalhousieHub_KOL">DalhousieHub_KOL</option>
+<option value="DalsinghsaraiHub_DSS">DalsinghsaraiHub_DSS</option>
+<option value="DaltonganjHub_DTO">DaltonganjHub_DTO</option>
+<option value="DanapurHub_DNR">DanapurHub_DNR</option>
+<option value="DantewaraHub_DWZ">DantewaraHub_DWZ</option>
+<option value="DarbhangaHub_DBG">DarbhangaHub_DBG</option>
+<option value="DarbhangaSplitHUB_DBG">DarbhangaSplitHUB_DBG</option>
+<option value="DaspurHub_DSP">DaspurHub_DSP</option>
+<option value="DaudnagarHub_DNO">DaudnagarHub_DNO</option>
+<option value="DehriOnSoneHub_DOS">DehriOnSoneHub_DOS</option>
+<option value="DeobhogHub_RPR">DeobhogHub_RPR</option>
+<option value="DeogarhMDH_DGH">DeogarhMDH_DGH</option>
+<option value="DeogharHub_DGH">DeogharHub_DGH</option>
+<option value="DeogharSplitHub_DGH">DeogharSplitHub_DGH</option>
+<option value="DergaonHub_DGN">DergaonHub_DGN</option>
+<option value="DewandighiHub_BDM">DewandighiHub_BDM</option>
+<option value="DhakaHub_DHK">DhakaHub_DHK</option>
+<option value="DhamnagarHub_BHC">DhamnagarHub_BHC</option>
+<option value="DhanpurHub_IXA">DhanpurHub_IXA</option>
+<option value="DhanyakuriaMDH_BSH">DhanyakuriaMDH_BSH</option>
+<option value="Dharmanagar1Hub_DMR">Dharmanagar1Hub_DMR</option>
+<option value="DhemajiHub_DMC">DhemajiHub_DMC</option>
+<option value="DhenkanalHub_DNK">DhenkanalHub_DNK</option>
+<option value="DhubriHub_DBB">DhubriHub_DBB</option>
+<option value="DhulagarhSplitMDH_KOL">DhulagarhSplitMDH_KOL</option>
+<option value="Digapahandihub_BMP">Digapahandihub_BMP</option>
+<option value="DinaraMDH_DRA">DinaraMDH_DRA</option>
+<option value="DobokaHub_HJI">DobokaHub_HJI</option>
+<option value="DomkolHub_MBB">DomkolHub_MBB</option>
+<option value="DudhnoiHub_DNI">DudhnoiHub_DNI</option>
+<option value="DudukaODH_DDK">DudukaODH_DDK</option>
+<option value="DuliajanHub_DLN">DuliajanHub_DLN</option>
+<option value="DumdumHUB_KOL">DumdumHUB_KOL</option>
+<option value="DumkaHub_DMK">DumkaHub_DMK</option>
+<option value="DumraonHub_BXR">DumraonHub_BXR</option>
+<option value="DurgachakMDH_HLD">DurgachakMDH_HLD</option>
+<option value="DurgapurHub_DGP">DurgapurHub_DGP</option>
+<option value="ETASHDibrugarhODH_DIB">ETASHDibrugarhODH_DIB</option>
+<option value="ETASHSAUKUCHIODH_GAU">ETASHSAUKUCHIODH_GAU</option>
+<option value="ElasticRunAmbikapurODH_AMR">ElasticRunAmbikapurODH_AMR</option>
+<option value="ElasticRunBamungachiSplitMDH_KOL">ElasticRunBamungachiSplitMDH_KOL</option>
+<option value="ElasticRunPanikoiliODH_JJK">ElasticRunPanikoiliODH_JJK</option>
+<option value="ElasticRunSealdahODH_KOL">ElasticRunSealdahODH_KOL</option>
+<option value="FatuhaHub_PAT">FatuhaHub_PAT</option>
+<option value="ForbesganjHub_FBG">ForbesganjHub_FBG</option>
+<option value="GAYASPLITHUB2_GAY">GAYASPLITHUB2_GAY</option>
+<option value="GadiaraHub_SSP">GadiaraHub_SSP</option>
+<option value="GanganiHub_GNN">GanganiHub_GNN</option>
+<option value="GangarampurHub_GRM">GangarampurHub_GRM</option>
+<option value="GangasagarMDH_GNG">GangasagarMDH_GNG</option>
+<option value="GardenReachHub_KOL">GardenReachHub_KOL</option>
+<option value="GarhwaHub_GHQ">GarhwaHub_GHQ</option>
+<option value="GariaHub_KOL">GariaHub_KOL</option>
+<option value="GariyabandHub_GAR">GariyabandHub_GAR</option>
+<option value="GautamnagarHub_BBI">GautamnagarHub_BBI</option>
+<option value="GayaHub_GAY">GayaHub_GAY</option>
+<option value="GayaSplitHub1_GAY">GayaSplitHub1_GAY</option>
+<option value="GazoleHub_GZO">GazoleHub_GZO</option>
+<option value="GhatsilaHub_GTS">GhatsilaHub_GTS</option>
+<option value="GiridihHub_GRD">GiridihHub_GRD</option>
+<option value="GirishParkHub_KOL">GirishParkHub_KOL</option>
+<option value="GoalparaHub_GLP">GoalparaHub_GLP</option>
+<option value="GoddaHub_GRA">GoddaHub_GRA</option>
+<option value="GogamukhHub_GOM">GogamukhHub_GOM</option>
+<option value="GogriJamalpurHub_GAI">GogriJamalpurHub_GAI</option>
+<option value="GolaghatHub_GLG">GolaghatHub_GLG</option>
+<option value="GolmuriHub_IXW">GolmuriHub_IXW</option>
+<option value="GonpuraHub_GON">GonpuraHub_GON</option>
+<option value="GopalganjHub_GOG">GopalganjHub_GOG</option>
+<option value="GopalnagarMDH_GPN">GopalnagarMDH_GPN</option>
+<option value="GopiballavpurHub_MDN">GopiballavpurHub_MDN</option>
+<option value="GopiganjMDH_DSP">GopiganjMDH_DSP</option>
+<option value="GossaigaonHub_KOJ">GossaigaonHub_KOJ</option>
+<option value="GunderdehiHub_GUN">GunderdehiHub_GUN</option>
+<option value="GunupurHub_GNP">GunupurHub_GNP</option>
+<option value="GurapHub_GRA">GurapHub_GRA</option>
+<option value="HabraHub_KOL">HabraHub_KOL</option>
+<option value="HajiGanjHub_PAT">HajiGanjHub_PAT</option>
+<option value="HajipurHub_HJP">HajipurHub_HJP</option>
+<option value="HajoHub_GAU">HajoHub_GAU</option>
+<option value="HarinaviHub_KOL">HarinaviHub_KOL</option>
+<option value="HarmuHub_IXR">HarmuHub_IXR</option>
+<option value="HarnautHub_HRT">HarnautHub_HRT</option>
+<option value="HazaribaghHub_HZB">HazaribaghHub_HZB</option>
+<option value="HazaribaghSplitODH_HZB">HazaribaghSplitODH_HZB</option>
+<option value="HilsaHub_HIL">HilsaHub_HIL</option>
+<option value="Hisuahub_NWD">Hisuahub_NWD</option>
+<option value="HojaiHub_HJI">HojaiHub_HJI</option>
+<option value="HowlyHub_BPR">HowlyHub_BPR</option>
+<option value="HowraghatHub_HGT">HowraghatHub_HGT</option>
+<option value="HuraMDH_HUA">HuraMDH_HUA</option>
+<option value="IchakHub_HZB">IchakHub_HZB</option>
+<option value="IndaHub_KGP">IndaHub_KGP</option>
+<option value="IndupurHub_KNP">IndupurHub_KNP</option>
+<option value="IslampurHub_IPR">IslampurHub_IPR</option>
+<option value="IslampurWBHub_IPR">IslampurWBHub_IPR</option>
+<option value="ItaharMDH_ITH">ItaharMDH_ITH</option>
+<option value="ItakholaHub_IKL">ItakholaHub_IKL</option>
+<option value="ItalgachaMDH_KOL">ItalgachaMDH_KOL</option>
+<option value="ItanagarHub_ITO">ItanagarHub_ITO</option>
+<option value="JAIGAONSPLITHUB_JGN">JAIGAONSPLITHUB_JGN</option>
+<option value="JORHATODH_JRH">JORHATODH_JRH</option>
+<option value="JagatpurHub_BBI">JagatpurHub_BBI</option>
+<option value="JagatsinghpurHub_BBI">JagatsinghpurHub_BBI</option>
+<option value="JagdalpurHub_JGR">JagdalpurHub_JGR</option>
+<option value="JagdishpurHub_JDP">JagdishpurHub_JDP</option>
+<option value="JagiroadHub_JID">JagiroadHub_JID</option>
+<option value="JagtaiHub_NIL">JagtaiHub_NIL</option>
+<option value="JainagarHub_MDH">JainagarHub_MDH</option>
+<option value="JaintpurHub_MZF">JaintpurHub_MZF</option>
+<option value="JaleswarHub_JER">JaleswarHub_JER</option>
+<option value="JalpaiguriHub_JPG">JalpaiguriHub_JPG</option>
+<option value="JamshedpurHub_IXW">JamshedpurHub_IXW</option>
+<option value="JamsuliHub_JER">JamsuliHub_JER</option>
+<option value="JamsuliHubtemp_JER">JamsuliHubtemp_JER</option>
+<option value="JamtaraHub_JMT">JamtaraHub_JMT</option>
+<option value="JamuiHub_JMU">JamuiHub_JMU</option>
+<option value="JandahaHub_VAS">JandahaHub_VAS</option>
+<option value="JarangHub_JRG">JarangHub_JRG</option>
+<option value="JehanabadHub_JHD">JehanabadHub_JHD</option>
+<option value="JeyporeHub_JYP">JeyporeHub_JYP</option>
+<option value="JhanjharpurHub_JJP">JhanjharpurHub_JJP</option>
+<option value="JhantipahariHub_JHI">JhantipahariHub_JHI</option>
+<option value="JharsugudaHub_JSG">JharsugudaHub_JSG</option>
+<option value="JhumriTelaiyaHub_KQR">JhumriTelaiyaHub_KQR</option>
+<option value="JogindraNagarHub_IXA">JogindraNagarHub_IXA</option>
+<option value="JonaiHub_MZS">JonaiHub_MZS</option>
+<option value="JorhatHub_JRH">JorhatHub_JRH</option>
+<option value="JoypurMDH_PRR">JoypurMDH_PRR</option>
+<option value="JunagarhHub_JNR">JunagarhHub_JNR</option>
+<option value="KahalgaonHub_CLG">KahalgaonHub_CLG</option>
+<option value="KakatpurHub_NMP">KakatpurHub_NMP</option>
+<option value="KalainHub_KLN">KalainHub_KLN</option>
+<option value="KamakhyanagarHub_DKN">KamakhyanagarHub_DKN</option>
+<option value="KamderaHub_KDR">KamderaHub_KDR</option>
+<option value="KanchraparaODH_KOL">KanchraparaODH_KOL</option>
+<option value="KankarBaghHub_PAT">KankarBaghHub_PAT</option>
+<option value="KankeHub_IXR">KankeHub_IXR</option>
+<option value="KankerHub_KAN">KankerHub_KAN</option>
+<option value="KantatoliHub_IXR">KantatoliHub_IXR</option>
+<option value="KarandighiMDH_KRN">KarandighiMDH_KRN</option>
+<option value="KarimganjHub_KXJ">KarimganjHub_KXJ</option>
+<option value="KatiharHub_KIR">KatiharHub_KIR</option>
+<option value="KatwaHub_KWA">KatwaHub_KWA</option>
+<option value="KendraparaHub_KNP">KendraparaHub_KNP</option>
+<option value="KendujharHub_KDJ">KendujharHub_KDJ</option>
+<option value="Keredarihub_CTR">Keredarihub_CTR</option>
+<option value="KhagariaHub_KGG">KhagariaHub_KGG</option>
+<option value="KhanakulMDH_AMB">KhanakulMDH_AMB</option>
+<option value="KhandagiriHub_BBI">KhandagiriHub_BBI</option>
+<option value="Kharagpurhub_KGP">Kharagpurhub_KGP</option>
+<option value="KhoyrasoleHub_BMG">KhoyrasoleHub_BMG</option>
+<option value="KhuntiHub_IXR">KhuntiHub_IXR</option>
+<option value="KhurdaHub_KUD">KhurdaHub_KUD</option>
+<option value="KhutaunaODH_MBI">KhutaunaODH_MBI</option>
+<option value="KishanganjHub_KNE">KishanganjHub_KNE</option>
+<option value="KokarHub_IXR">KokarHub_IXR</option>
+<option value="KokarSplitHub_IXR">KokarSplitHub_IXR</option>
+<option value="KokrajharHub_KOJ">KokrajharHub_KOJ</option>
+<option value="KoliaborHub_TZR">KoliaborHub_TZR</option>
+<option value="KondagaonHub_KDN">KondagaonHub_KDN</option>
+<option value="KonnagarHub_KOG">KonnagarHub_KOG</option>
+<option value="KoraputHub_KRP">KoraputHub_KRP</option>
+<option value="KorbaHub_KOR">KorbaHub_KOR</option>
+<option value="KotulpurHub_KOP">KotulpurHub_KOP</option>
+<option value="Kumarghat1Hub_KUG">Kumarghat1Hub_KUG</option>
+<option value="KusumgramHub_KSG">KusumgramHub_KSG</option>
+<option value="LachhuarHub_JMU">LachhuarHub_JMU</option>
+<option value="LakhanpurHub_LKP">LakhanpurHub_LKP</option>
+<option value="LakhisagarMDH_KHT">LakhisagarMDH_KHT</option>
+<option value="LakhisaraiHub_LKR">LakhisaraiHub_LKR</option>
+<option value="LalaBazarHub_IXS">LalaBazarHub_IXS</option>
+<option value="LalganjHub_LLG">LalganjHub_LLG</option>
+<option value="LalgarhMDH_JGM">LalgarhMDH_JGM</option>
+<option value="LalgolaHub_LGL">LalgolaHub_LGL</option>
+<option value="LankaHub_LKA">LankaHub_LKA</option>
+<option value="LateharHub_LAT">LateharHub_LAT</option>
+<option value="LauriyaHub_LRY">LauriyaHub_LRY</option>
+<option value="LebukhaliMDH_BSH">LebukhaliMDH_BSH</option>
+<option value="LoadshareAndalSplitMDH_DGP">LoadshareAndalSplitMDH_DGP</option>
+<option value="LohardagaHub_LAD">LohardagaHub_LAD</option>
+<option value="MadhepuraHub_DMH">MadhepuraHub_DMH</option>
+<option value="MadhubaniHub_MBI">MadhubaniHub_MBI</option>
+<option value="MadhupurHub_MDP">MadhupurHub_MDP</option>
+<option value="MadpurHub_MDP">MadpurHub_MDP</option>
+<option value="MaharajganjHub_SWN">MaharajganjHub_SWN</option>
+<option value="MaheshpurHUB_MAH">MaheshpurHUB_MAH</option>
+<option value="MahishmuriHub_MHB">MahishmuriHub_MHB</option>
+<option value="MahnarHub_VAS">MahnarHub_VAS</option>
+<option value="MajhdiaHub_MIJ">MajhdiaHub_MIJ</option>
+<option value="MakhdumpurHub_JHD">MakhdumpurHub_JHD</option>
+<option value="MakumhubHub_TSK">MakumhubHub_TSK</option>
+<option value="MaligaonHub_GAU">MaligaonHub_GAU</option>
+<option value="MalmaliyaHub_MGZ">MalmaliyaHub_MGZ</option>
+<option value="MandarHub_IXR">MandarHub_IXR</option>
+<option value="ManebhanjangMDH_MAN">ManebhanjangMDH_MAN</option>
+<option value="ManendragarhHub_MGH">ManendragarhHub_MGH</option>
+<option value="MangaldoiHub_MGI">MangaldoiHub_MGI</option>
+<option value="ManpurMDH_GAY">ManpurMDH_GAY</option>
+<option value="MargheritaHub_MRG">MargheritaHub_MRG</option>
+<option value="Marigaonhub_NGN">Marigaonhub_NGN</option>
+<option value="MarinedriveHub_RPR">MarinedriveHub_RPR</option>
+<option value="MarwanHub_MZF">MarwanHub_MZF</option>
+<option value="MasaurhiHub_TEA">MasaurhiHub_TEA</option>
+<option value="MatiariHub_KNE">MatiariHub_KNE</option>
+<option value="MidnaporeHub_MDN">MidnaporeHub_MDN</option>
+<option value="MinapurHub_MZF">MinapurHub_MZF</option>
+<option value="MirganjHub_GOG">MirganjHub_GOG</option>
+<option value="MirikMDH_MIR">MirikMDH_MIR</option>
+<option value="MirzaHub_GAU">MirzaHub_GAU</option>
+<option value="MithanpuraHub_MZF">MithanpuraHub_MZF</option>
+<option value="MithapurHub_PAT">MithapurHub_PAT</option>
+<option value="ModudabadHub_MDD">ModudabadHub_MDD</option>
+<option value="MohaniaHub_BBU">MohaniaHub_BBU</option>
+<option value="MohanpurMDH_MHN">MohanpurMDH_MHN</option>
+<option value="MokamaHub_MKA">MokamaHub_MKA</option>
+<option value="MoranhatHub_MRH">MoranhatHub_MRH</option>
+<option value="MorgramHub_MGA">MorgramHub_MGA</option>
+<option value="MotihariHub_MTI">MotihariHub_MTI</option>
+<option value="MotihariSplitHub_MTI">MotihariSplitHub_MTI</option>
+<option value="MowaHub_RPR">MowaHub_RPR</option>
+<option value="MoynapurSpiltMDH_VSU">MoynapurSpiltMDH_VSU</option>
+<option value="MungerCityHub_MCT">MungerCityHub_MCT</option>
+<option value="MungerHub_JMP">MungerHub_JMP</option>
+<option value="MunigudaHub_GNP">MunigudaHub_GNP</option>
+<option value="MuraraiHub_MRR">MuraraiHub_MRR</option>
+<option value="MurshidabadSplitMDH_MBB">MurshidabadSplitMDH_MBB</option>
+<option value="MuzaffarpurHub_MZF">MuzaffarpurHub_MZF</option>
+<option value="NabadwipHub_NDA">NabadwipHub_NDA</option>
+<option value="NagaonHub_NGN">NagaonHub_NGN</option>
+<option value="NagarukharaMDH_HBR">NagarukharaMDH_HBR</option>
+<option value="NaharkatiyaHub_NHK">NaharkatiyaHub_NHK</option>
+<option value="NamkhanaMDH_NAM">NamkhanaMDH_NAM</option>
+<option value="NamrupHub_NAM">NamrupHub_NAM</option>
+<option value="NandakumarMDH_TMZ">NandakumarMDH_TMZ</option>
+<option value="NandigramHub_MDN">NandigramHub_MDN</option>
+<option value="NarayanapurHub_TZR">NarayanapurHub_TZR</option>
+<option value="NarayanpurODHtemp_LDA">NarayanpurODHtemp_LDA</option>
+<option value="NarkatiaHub_NKT">NarkatiaHub_NKT</option>
+<option value="NarkatiaganjHub_NKE">NarkatiaganjHub_NKE</option>
+<option value="NarpatganjMDH_FBG">NarpatganjMDH_FBG</option>
+<option value="NasriganjHub_DOS">NasriganjHub_DOS</option>
+<option value="NaugachiaHub_NNA">NaugachiaHub_NNA</option>
+<option value="NaviNagarHub_Nav">NaviNagarHub_Nav</option>
+<option value="NawadahHub_NWD">NawadahHub_NWD</option>
+<option value="NayagarhHub_NYG">NayagarhHub_NYG</option>
+<option value="NaziraHub_NZR">NaziraHub_NZR</option>
+<option value="NazirpurHub_NZP">NazirpurHub_NZP</option>
+<option value="NewtownHub_KOL">NewtownHub_KOL</option>
+<option value="NimapadaHub_NMP">NimapadaHub_NMP</option>
+<option value="NirsaHub_NRA">NirsaHub_NRA</option>
+<option value="NoonmatiHub_GAU">NoonmatiHub_GAU</option>
+<option value="NorthLakhimpurHub_NLP">NorthLakhimpurHub_NLP</option>
+<option value="NumaligarhHub_GLG">NumaligarhHub_GLG</option>
+<option value="OldTownHub_BBI">OldTownHub_BBI</option>
+<option value="Padampurhub_GNP">Padampurhub_GNP</option>
+<option value="PahlejaHub_PHJ">PahlejaHub_PHJ</option>
+<option value="PaikmalHub_SBP">PaikmalHub_SBP</option>
+<option value="PailapoolHub_IXS">PailapoolHub_IXS</option>
+<option value="PakriHub_DMH">PakriHub_DMH</option>
+<option value="PakyongMDH_PYG">PakyongMDH_PYG</option>
+<option value="PalasiHub_ARR">PalasiHub_ARR</option>
+<option value="PaliganjHub_PGJ">PaliganjHub_PGJ</option>
+<option value="PanchanandapurHub_PCD">PanchanandapurHub_PCD</option>
+<option value="PanjiparaHub_PNJ">PanjiparaHub_PNJ</option>
+<option value="ParadipHub_PDP">ParadipHub_PDP</option>
+<option value="PasighatHub_IXT">PasighatHub_IXT</option>
+<option value="PatahiHub_PTI">PatahiHub_PTI</option>
+<option value="PathsalaHub_PBL">PathsalaHub_PBL</option>
+<option value="PatiramODH_PTR">PatiramODH_PTR</option>
+<option value="PeterbarHub_GRE">PeterbarHub_GRE</option>
+<option value="PhansidewaMDH_IXB">PhansidewaMDH_IXB</option>
+<option value="PhulbaniHub_PLB">PhulbaniHub_PLB</option>
+<option value="PhulparasHub_MBI">PhulparasHub_MBI</option>
+<option value="PhulwarisharifHub_DNP">PhulwarisharifHub_DNP</option>
+<option value="PirpaintiHub_PPT">PirpaintiHub_PPT</option>
+<option value="PunpunHub_PAT">PunpunHub_PAT</option>
+<option value="PunsiaHub_PNA">PunsiaHub_PNA</option>
+<option value="PupriHub_JNR">PupriHub_JNR</option>
+<option value="PuriHub_PUR">PuriHub_PUR</option>
+<option value="PurniaHub_PRN">PurniaHub_PRN</option>
+<option value="PurniaSplitHub1_PRN">PurniaSplitHub1_PRN</option>
+<option value="PusaHub_SMP">PusaHub_SMP</option>
+<option value="RAIDIGHIHUB_RDG">RAIDIGHIHUB_RDG</option>
+<option value="RJSCDhekiajuliODH_TZR">RJSCDhekiajuliODH_TZR</option>
+<option value="RJSCKamalpurODH_KAM">RJSCKamalpurODH_KAM</option>
+<option value="RJSCLungleiODH_LGL">RJSCLungleiODH_LGL</option>
+<option value="RafiganjHub_AWB">RafiganjHub_AWB</option>
+<option value="RaghopurHub_SHC">RaghopurHub_SHC</option>
+<option value="RaigarhHub_RGH">RaigarhHub_RGH</option>
+<option value="RaipurCityHub_RPR">RaipurCityHub_RPR</option>
+<option value="RaipurCitySplitHub_RPR">RaipurCitySplitHub_RPR</option>
+<option value="RaipurHub_RPR">RaipurHub_RPR</option>
+<option value="RajabazarHub_PAT">RajabazarHub_PAT</option>
+<option value="RajauliHub_RJL">RajauliHub_RJL</option>
+<option value="RajdhamHub_RJD">RajdhamHub_RJD</option>
+<option value="RajdhanwarHub_RDW">RajdhanwarHub_RDW</option>
+<option value="RajivNagarHub_PAT">RajivNagarHub_PAT</option>
+<option value="RajkanikaHub_RJK">RajkanikaHub_RJK</option>
+<option value="RajnandgaonHub_RJN">RajnandgaonHub_RJN</option>
+<option value="RamgarhHub_RMT">RamgarhHub_RMT</option>
+<option value="RampurhatHub_RPH">RampurhatHub_RPH</option>
+<option value="RanaghatHub_RHA">RanaghatHub_RHA</option>
+<option value="RangpoHub_RNG">RangpoHub_RNG</option>
+<option value="RaniganjMDH_FBG">RaniganjMDH_FBG</option>
+<option value="RatanPurcityHub_PAB">RatanPurcityHub_PAB</option>
+<option value="RatanpurHub_PAB">RatanpurHub_PAB</option>
+<option value="RatanpurMDH_RAT">RatanpurMDH_RAT</option>
+<option value="RatuHub_IXR">RatuHub_IXR</option>
+<option value="RatuSplitHub_IXR">RatuSplitHub_IXR</option>
+<option value="RaxaulHub_RXL">RaxaulHub_RXL</option>
+<option value="RayagadaHub_RGD">RayagadaHub_RGD</option>
+<option value="RohaHub_NGN">RohaHub_NGN</option>
+<option value="RoseraHub_ROA">RoseraHub_ROA</option>
+<option value="RourkelaHub_RRK">RourkelaHub_RRK</option>
+<option value="RunnisaidpurHub_SMI">RunnisaidpurHub_SMI</option>
+<option value="Rupnarayanpurhub_ASN">Rupnarayanpurhub_ASN</option>
+<option value="SagunaMoreHub_PAT">SagunaMoreHub_PAT</option>
+<option value="SaharsaHub_SHC">SaharsaHub_SHC</option>
+<option value="SahebganjHub_SBG">SahebganjHub_SBG</option>
+<option value="SahibganjHub_SBG">SahibganjHub_SBG</option>
+<option value="SakherBazarHub_KOL">SakherBazarHub_KOL</option>
+<option value="Sakhigopalhub_PUR">Sakhigopalhub_PUR</option>
+<option value="SalipurHub_CTC">SalipurHub_CTC</option>
+<option value="SalkiaHub_KOL">SalkiaHub_KOL</option>
+<option value="SaltoraHub_SLR">SaltoraHub_SLR</option>
+<option value="SamastipurHub_SMP">SamastipurHub_SMP</option>
+<option value="SandalPurHub_PAT">SandalPurHub_PAT</option>
+<option value="SankaraHub_RPR">SankaraHub_RPR</option>
+<option value="Santirbazar1Hub_SNT">Santirbazar1Hub_SNT</option>
+<option value="SaranHub_CPR">SaranHub_CPR</option>
+<option value="SarupatharHub_SZR">SarupatharHub_SZR</option>
+<option value="SasaramHub_SSM">SasaramHub_SSM</option>
+<option value="SatighatHubSplit_BKR">SatighatHubSplit_BKR</option>
+<option value="SaurBazarHub_SHC">SaurBazarHub_SHC</option>
+<option value="SealdahHUB_KOL">SealdahHUB_KOL</option>
+<option value="SectorVHub_KOL">SectorVHub_KOL</option>
+<option value="SeharabazarMDH_SRB">SeharabazarMDH_SRB</option>
+<option value="ShadowFaxGosabaMDH_GOS">ShadowFaxGosabaMDH_GOS</option>
+<option value="ShaktipurMDH_SHT">ShaktipurMDH_SHT</option>
+<option value="ShantipurHub_GAU">ShantipurHub_GAU</option>
+<option value="ShantipurHub_STP">ShantipurHub_STP</option>
+<option value="SheikhpuraHub_SHK">SheikhpuraHub_SHK</option>
+<option value="SheoharHub_SMI">SheoharHub_SMI</option>
+<option value="SherghatiHub_GAY">SherghatiHub_GAY</option>
+<option value="ShivajinagarHub_SMP">ShivajinagarHub_SMP</option>
+<option value="ShyamnagarHub_KOL">ShyamnagarHub_KOL</option>
+<option value="SibsagarHub_SBS">SibsagarHub_SBS</option>
+<option value="SilapatharHub_SPT">SilapatharHub_SPT</option>
+<option value="SilcharHub_IXS">SilcharHub_IXS</option>
+<option value="SiliguriSplitMDH_IXB">SiliguriSplitMDH_IXB</option>
+<option value="SimariaHub_CTR">SimariaHub_CTR</option>
+<option value="SimriHub_SHC">SimriHub_SHC</option>
+<option value="SingtamODH_SGT">SingtamODH_SGT</option>
+<option value="SingurHub_SIU">SingurHub_SIU</option>
+<option value="SipajharMDH_SPJ">SipajharMDH_SPJ</option>
+<option value="SitamarhiHub_SMI">SitamarhiHub_SMI</option>
+<option value="SiuriSplitMDH_SUR">SiuriSplitMDH_SUR</option>
+<option value="SiwanHub_SWN">SiwanHub_SWN</option>
+<option value="SixMileHub_GAU">SixMileHub_GAU</option>
+<option value="SodepurHub_KOL">SodepurHub_KOL</option>
+<option value="SohsaraiHub_BSF">SohsaraiHub_BSF</option>
+<option value="SonadaMDH_SON">SonadaMDH_SON</option>
+<option value="SonamuiMDH_DSP">SonamuiMDH_DSP</option>
+<option value="SonamukhiHub_VSU">SonamukhiHub_VSU</option>
+<option value="SonapurHub_GAU">SonapurHub_GAU</option>
+<option value="SonariHub_SNI">SonariHub_SNI</option>
+<option value="SugauliHub_MTI">SugauliHub_MTI</option>
+<option value="SuhnatHub_BAW">SuhnatHub_BAW</option>
+<option value="SukmaHub_SUK">SukmaHub_SUK</option>
+<option value="SultanganjHub_BGP">SultanganjHub_BGP</option>
+<option value="SundargarhHub_SDG">SundargarhHub_SDG</option>
+<option value="SupaulHub_SOU">SupaulHub_SOU</option>
+<option value="Suradahub_SRD">Suradahub_SRD</option>
+<option value="SurajgarhaHub_SUR">SurajgarhaHub_SUR</option>
+<option value="SwastikMDH_MGM">SwastikMDH_MGM</option>
+<option value="TadongHub_TAD">TadongHub_TAD</option>
+<option value="TakiHMDH_BSH">TakiHMDH_BSH</option>
+<option value="TalcherHub_TLH">TalcherHub_TLH</option>
+<option value="TaldangraMDH_VSU">TaldangraMDH_VSU</option>
+<option value="TamlukHub_TMZ">TamlukHub_TMZ</option>
+<option value="TangiHub_CTK">TangiHub_CTK</option>
+<option value="TanglaHub_TNG">TanglaHub_TNG</option>
+<option value="TapanHub_TPN">TapanHub_TPN</option>
+<option value="TarapurHub_TRP">TarapurHub_TRP</option>
+<option value="TeestaBazarMDH_TEE">TeestaBazarMDH_TEE</option>
+<option value="TehattaMDH_TEH">TehattaMDH_TEH</option>
+<option value="Teliamura1Hub_TLR">Teliamura1Hub_TLR</option>
+<option value="TeokHub_JRH">TeokHub_JRH</option>
+<option value="TihidiHub_BHC">TihidiHub_BHC</option>
+<option value="TinsukiaHub_TSK">TinsukiaHub_TSK</option>
+<option value="TitabarHub_TTB">TitabarHub_TTB</option>
+<option value="TitlagarhHub_TIG">TitlagarhHub_TIG</option>
+<option value="TopsiaHub_KOL">TopsiaHub_KOL</option>
+<option value="TufanGanjMDH_TUF">TufanGanjMDH_TUF</option>
+<option value="UdaipurTripuraHub_IXR">UdaipurTripuraHub_IXR</option>
+<option value="UdalguriHub_ULG">UdalguriHub_ULG</option>
+<option value="UdaynarayanpurMDH_BAC">UdaynarayanpurMDH_BAC</option>
+<option value="UkhraMDH_UKR">UkhraMDH_UKR</option>
+<option value="UlubariHub_GAU">UlubariHub_GAU</option>
+<option value="UluberiaHub_ULB">UluberiaHub_ULB</option>
+<option value="UmerkoteHub_KRP">UmerkoteHub_KRP</option>
+<option value="UstiMDH_DDH">UstiMDH_DDH</option>
+<option value="VaishaliHub_HJP">VaishaliHub_HJP</option>
+<option value="VxpressBurnpurODH_ASN">VxpressBurnpurODH_ASN</option>
+<option value="WheeleyBhataparaODH_BHT">WheeleyBhataparaODH_BHT</option>
+<option value="WheeleyDurgODH_BIA">WheeleyDurgODH_BIA</option>
+<option value="ZeroMilePahariHub_PAT">ZeroMilePahariHub_PAT</option>
+<option value="latpancharMDH_IXB">latpancharMDH_IXB</option>
+        </select>
       </div>
-      <button class="btn-start" onclick="startGame()">Start Quiz</button>
+      <input type="hidden" id="f-hb-val">
+      <div class="err" id="e-hb"></div>
+    </div>
+    <button class="btn o" id="rbtn" onclick="doReg()">Proceed to Quiz</button>
+    <div class="admlnk" onclick="goAdmin()">Admin Access</div>
+  </div>
+
+  <!-- ALREADY ATTEMPTED -->
+  <div class="pg" id="p-al">
+    <div class="alb">
+      <div class="ali">🚫</div>
+      <div class="alt">Already Attempted!</div>
+      <div class="alm">You have already completed this quiz.<br>Each employee can attempt this quiz only once.</div>
+      <div class="alx" id="alx"></div>
+      <button class="btn o" onclick="go('p-reg')">Go Back</button>
     </div>
   </div>
 
-  <!-- QUIZ SCREEN -->
-  <div class="screen" id="quiz-screen">
-    <div class="top-bar">
-      <div class="progress-wrap"><div class="progress-fill" id="prog"></div></div>
-      <div class="q-counter" id="q-counter">1 / 15</div>
-      <div class="timer-box" id="timer">20s</div>
-    </div>
-    <div id="mod-tag-wrap"></div>
-    <div class="q-text" id="q-text"></div>
-    <div class="options-grid" id="opts"></div>
-    <button class="next-btn" id="next-btn" onclick="nextQ()" disabled>Next Question</button>
-  </div>
-
-  <!-- RESULT SCREEN -->
-  <div class="screen" id="result-screen">
-    <div class="result-inner">
-      <div class="trophy" id="trophy-icon"></div>
-      <div class="result-title" id="result-title"></div>
-      <div class="result-sub" id="result-sub"></div>
-      <div class="score-big" id="score-big"></div>
-      <div class="score-label">Your Score</div>
-      <div class="result-mini">
-        <div class="rm-box"><div class="rm-val" id="res-correct" style="color:#1a7f4b"></div><div class="rm-lbl">Correct</div></div>
-        <div class="rm-box"><div class="rm-val" id="res-wrong" style="color:#cc3333"></div><div class="rm-lbl">Wrong / Skipped</div></div>
+  <!-- START -->
+  <div class="pg" id="p-st">
+    <div style="text-align:center">
+      <div class="logo" style="font-size:26px">FK</div>
+      <div class="h1">Project ELEVATE</div>
+      <div style="font-size:12px;font-weight:700;color:#F77F00;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Knowledge Quiz</div>
+      <div class="h2">15 questions — 20 seconds each. Good luck!</div>
+      <div class="pcrd" id="pcrd"></div>
+      <div class="stats">
+        <div class="stat"><div class="sn">15</div><div class="sl">Questions</div></div>
+        <div class="stat"><div class="sn">20s</div><div class="sl">Per question</div></div>
+        <div class="stat"><div class="sn">3</div><div class="sl">Modules</div></div>
       </div>
-      <div class="badge-row" id="badge-row"></div>
-      <button class="replay-btn" onclick="goHome()">Play Again</button>
+      <button class="btn o" onclick="openCamera()">Start Quiz →</button>
+    </div>
+  </div>
+
+  <!-- CAMERA SCREEN -->
+  <div class="pg" id="p-cam">
+    <div class="cam-wrap">
+      <div class="logo" style="font-size:22px;margin-bottom:10px">📸</div>
+      <div class="h1" style="margin-bottom:4px">Identity Verification</div>
+      <div class="h2">Photo is mandatory before starting the quiz</div>
+
+      <!-- Live Camera -->
+      <div class="cam-box" id="cam-box" style="display:none">
+        <video id="cam-video" autoplay playsinline muted></video>
+      </div>
+
+      <!-- Preview -->
+      <img id="cam-preview" class="cam-preview" alt="Your photo">
+
+      <!-- Status -->
+      <div id="cam-status" style="font-size:13px;color:#888;margin:10px 0;min-height:20px"></div>
+
+      <!-- Camera Button -->
+      <button class="cam-snap" id="snap-btn" style="display:none" onclick="snapPhoto()" title="Take Photo">📷</button>
+
+      <!-- Camera blocked message -->
+      <div id="upload-area" style="display:none;margin:10px 0">
+        <div style="background:#fff0f0;border:2px solid #e05c5c;border-radius:12px;padding:20px;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">⚠️</div>
+          <div style="font-size:14px;color:#c33;font-weight:700;margin-bottom:8px">Camera Access Blocked</div>
+          <div style="font-size:13px;color:#555;margin-bottom:14px;line-height:1.6">
+            Please follow these steps:<br>
+            1. Click the <b>🔒 lock icon</b> in address bar<br>
+            2. Set Camera to <b>Allow</b><br>
+            3. Click <b>Retry Camera</b> below
+          </div>
+          <button onclick="retryCam()" style="background:#F77F00;color:#fff;border:none;border-radius:9px;padding:11px 24px;font-size:14px;font-weight:700;cursor:pointer;width:100%">🔄 Retry Camera</button>
+        </div>
+      </div>
+
+      <!-- Retake -->
+      <button class="retake-btn" id="retake-btn" style="display:none" onclick="retakePhoto()">🔄 Retake / Change Photo</button>
+
+      <!-- Proceed — only shows after photo taken -->
+      <div class="acts" style="margin-top:12px">
+        <button class="btn o" id="cam-proceed" style="display:none;background:#1a7f4b" onclick="proceedAfterPhoto()">✅ Photo Confirmed — Start Quiz</button>
+        <button class="btn g" onclick="goBackFromCam()">← Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="pg" id="p-qz">
+    <div class="topbar">
+      <div class="pw"><div class="pf" id="pf"></div></div>
+      <div class="qn" id="qn">1/15</div>
+      <div class="tm" id="tm">20s</div>
+    </div>
+    <div id="tg"></div>
+    <div class="qt" id="qt"></div>
+    <div class="og" id="og"></div>
+    <button class="nb" id="nb" onclick="nxtQ()" disabled>Next Question</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="pg" id="p-rs">
+    <div class="ri">
+      <div class="trph" id="tp"></div>
+      <div class="rtl" id="rl"></div>
+      <div class="rsb" id="rs"></div>
+      <div class="rbg" id="rb"></div>
+      <div class="rll">Your Score</div>
+      <div class="rmn">
+        <div class="rbox"><div class="rv" id="rc" style="color:#1a7f4b"></div><div class="rl">Correct</div></div>
+        <div class="rbox"><div class="rv" id="rw" style="color:#c33"></div><div class="rl">Wrong / Skipped</div></div>
+      </div>
+      <div class="bdgs" id="bds"></div>
+      <!-- Module Breakdown -->
+      <div style="background:#f9f9f9;border:1px solid #eee;border-radius:10px;padding:14px;margin:12px 0;text-align:left">
+        <div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Module Wise Score</div>
+        <div id="mod-breakdown"></div>
+      </div>
+      <p style="font-size:12px;color:#bbb;margin-bottom:14px">Quiz completed. Your result has been recorded.</p>
+      <div class="acts">
+        <button class="btn o" onclick="downloadCert()">Download Certificate</button>
+        <button class="btn gn" onclick="showLeaderboard()">View Leaderboard</button>
+        <button class="btn o" onclick="newAtt()">New Attempt (Different User)</button>
+        <button class="btn g" onclick="go('p-reg')">Go to Home</button>
+        <button class="btn w" onclick="goAdmin()">Admin Access</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="pg" id="p-lb">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:18px;font-weight:700;color:#111">🏆 Leaderboard</div>
+      <div style="font-size:12px;color:#F77F00;cursor:pointer;border:1px solid #F77F00;border-radius:6px;padding:4px 9px" onclick="go('p-rs')">Back</div>
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:14px">Top performers across all hubs</div>
+    <div id="lb-table"></div>
+    <div style="margin-top:14px">
+      <button class="btn g" onclick="go('p-rs')">Back to Result</button>
     </div>
   </div>
 
   <!-- ADMIN LOGIN -->
-  <div class="screen" id="admin-login-screen">
-    <div class="admin-login-wrap">
-      <div class="al-title">Admin Access</div>
-      <div class="al-sub">Enter admin password to view reports</div>
-      <input class="al-input" id="admin-pass" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')checkAdminPass()">
-      <div class="al-err" id="al-err">Incorrect password. Try again.</div>
-      <button class="al-btn" onclick="checkAdminPass()">Login</button>
-      <span class="al-cancel" onclick="show('reg-screen')">Cancel</span>
+  <div class="pg" id="p-alog">
+    <div class="alw">
+      <div style="font-size:36px;margin-bottom:12px">🔐</div>
+      <div class="h1" style="margin-bottom:4px">Admin Access</div>
+      <div class="h2">Enter password to view reports</div>
+      <input class="aip" id="ap" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="ae" id="ae"></div>
+      <button class="btn o" id="alb" onclick="doLogin()">Login</button>
+      <span class="ac" onclick="go('p-reg')">Cancel</span>
     </div>
   </div>
 
   <!-- ADMIN DASHBOARD -->
-  <div class="screen" id="admin-screen">
-    <div class="admin-inner">
-      <div class="admin-header">
-        <div class="admin-title">Admin Report</div>
-        <div class="admin-close" onclick="show('reg-screen')">Exit</div>
-      </div>
-      <div class="summary-grid" id="admin-summary"></div>
-      <div class="section-head">Player Results</div>
-      <div class="tbl-wrap" id="admin-table"></div>
-      <button class="export-btn" onclick="exportCSV()">Download Report as CSV</button>
-      <button class="clear-btn" onclick="clearData()">Clear All Data</button>
+  <div class="pg" id="p-adm">
+    <div class="ah">
+      <div class="at">Admin Report</div>
+      <div class="ax" onclick="go('p-reg')">Exit</div>
+    </div>
+    <div class="note">Live data from Google Sheets. Click Open Sheet for full data and filtering.</div>
+    <div class="sg" id="sg"></div>
+    <div class="sh">Recent Players (last 20)</div>
+    <div class="tw" id="tw"></div>
+    <div class="acts" style="margin-top:12px">
+      <button class="btn gn" onclick="openSh()">Open Google Sheet</button>
+      <button class="btn dk" onclick="doCSV()">Download CSV Report</button>
     </div>
   </div>
 
-  <div class="fk-footer">Project ELEVATE &nbsp;·&nbsp; Flipkart Supply Chain &nbsp;·&nbsp; SB-II Region</div>
+  <div class="ftr">Project ELEVATE &nbsp;·&nbsp; Flipkart Supply Chain &nbsp;·&nbsp; SB-II Region</div>
 </div>
 
 <script>
-var ADMIN_PASS = 'ELEVATE@2026';
-
-var allQ=[
-  {mod:'loss',tag:'Loss',q:'What does BRSNR stand for?',opts:['Bag Returned but Shipment Not Received','Bag Received but Shipment Not Received','Bag Reconciled but Shipment Not Reached','Bag Released but Shipment Not Registered'],ans:1},
-  {mod:'loss',tag:'Loss',q:'Which of the following is classified as a Direct Loss?',opts:['SPF Loss','Myntra Q2 Loss','BRSNR Loss','Fraud Loss'],ans:2},
-  {mod:'loss',tag:'Loss',q:'A hub holds a shipment for 12 days from the creation date. What happens?',opts:['It is automatically RTO\'d','It is marked as untraceable','It comes under Direct Loss — max ageing exceeded','It is reconnected to MH'],ans:2},
-  {mod:'loss',tag:'Loss',q:'What action prevents a shipment from falling into the Untraceable bucket?',opts:['Connect to MH immediately','Perform PRC — Physical Record Check','Raise a Genie ticket','Mark it as lost'],ans:1},
-  {mod:'loss',tag:'Loss',q:'Content Verification must be completed within how many hours for RTO/RVP shipments?',opts:['12 hours','24 hours','48 hours','72 hours'],ans:2},
-  {mod:'loss',tag:'Loss',q:'During RTO Content Verification, what must NEVER be done with mobile phones?',opts:['Take photos of the shipment','Switch them ON','Download invoice','Scan barcode'],ans:1},
-  {mod:'cx',tag:'CX',q:'What does UDBAD mean in Customer Experience metrics?',opts:['Undelivered Bad Attempt Daily','Negative feedback from customer due to fake delivery attempt','Undelivered But Attempted Delivery','Unassigned Delivery Bad Attempt'],ans:1},
-  {mod:'cx',tag:'CX',q:'What is the formula for CXNS — Customer Negative Score?',opts:['(UDBAD / Total Attempts) x 1000','(UDBAD + Wrong Delivery) / Total Attempts x 10000','(Wrong Delivery / Total OFD) x 100','(Total Contacts / Total Deliveries) x 1000'],ans:1},
-  {mod:'cx',tag:'CX',q:'What is the TAT to close a customer escalation under FK TAT SOP?',opts:['12 hours','48 hours','24 hours','72 hours'],ans:2},
-  {mod:'cx',tag:'CX',q:'L3 Escalation refers to which type of complaint?',opts:['Delay in delivery beyond 3 days','Customer contacting CS more than 3 times','Customer escalating via social media tagging leadership','Customer requesting refund without RTO'],ans:2},
-  {mod:'cx',tag:'CX',q:'What does APF stand for in ERP context?',opts:['Attempt Processing Framework','Attempt to Prioritization Framework','Allocation Planning Function','Attempt Performance Flag'],ans:1},
-  {mod:'rel',tag:'Reliability',q:'What is the formula for CPD Breach %?',opts:['(Attempted / Total CPD) x 100','(Un-attempted + closed on hub dependency / Total CPD) x 100','(Delivered / OFD) x 100','(Breach / Total OFD) x 100'],ans:1},
-  {mod:'rel',tag:'Reliability',q:'What does EMO — Early Morning OFD — measure?',opts:['Shipments delivered before noon','Shipments dispatched and assigned to WM before 10 AM','Number of WMs reporting before 8 AM','Runsheets created after 10 AM'],ans:1},
-  {mod:'rel',tag:'Reliability',q:'What is a Repromise Breach?',opts:['Shipment delivered outside working hours','Shipment missing CPD and also failing within the 48-72 hr repromise window','Shipment returned without attempt','Shipment held at hub more than 5 days'],ans:1},
-  {mod:'rel',tag:'Reliability',q:'ZRS — Zero Run Sheet — refers to:',opts:['A runsheet with zero shipments assigned','Shipments in 1 runsheet with 0% conversion','A WM who created no runsheet','A hub with zero shipments received'],ans:1},
+var QS=[
+  {m:'L',t:'Loss',q:'What does BRSNR stand for?',o:['Bag Returned but Shipment Not Received','Bag Received but Shipment Not Received','Bag Reconciled but Shipment Not Reached','Bag Released but Shipment Not Registered'],a:1},
+  {m:'L',t:'Loss',q:'Which is classified as a Direct Loss?',o:['SPF Loss','Myntra Q2 Loss','BRSNR Loss','Fraud Loss'],a:2},
+  {m:'L',t:'Loss',q:'Hub holds shipment for 12 days from creation. What happens?',o:['Auto RTOd','Marked untraceable','Direct Loss — max ageing exceeded','Reconnected to MH'],a:2},
+  {m:'L',t:'Loss',q:'What prevents a shipment falling into Untraceable bucket?',o:['Connect to MH immediately','Perform PRC — Physical Record Check','Raise Genie ticket','Mark as lost'],a:1},
+  {m:'L',t:'Loss',q:'CV must be done within how many hours for RTO/RVP shipments?',o:['12 hours','24 hours','48 hours','72 hours'],a:2},
+  {m:'L',t:'Loss',q:'During RTO CV what must NEVER be done with mobile phones?',o:['Take photos','Switch them ON','Download invoice','Scan barcode'],a:1},
+  {m:'C',t:'CX',q:'What does UDBAD mean in Customer Experience metrics?',o:['Undelivered Bad Attempt Daily','Negative feedback for undelivered shipment due to fake attempt','Undelivered But Attempted Delivery','Unassigned Delivery Bad Attempt'],a:1},
+  {m:'C',t:'CX',q:'Formula for CXNS — Customer Negative Score?',o:['(UDBAD / Attempts) x 1000','(UDBAD + Wrong Delivery) / Attempts x 10000','(Wrong Delivery / OFD) x 100','(Contacts / Deliveries) x 1000'],a:1},
+  {m:'C',t:'CX',q:'TAT to close a customer escalation under FK TAT SOP?',o:['12 hours','48 hours','24 hours','72 hours'],a:2},
+  {m:'C',t:'CX',q:'L3 Escalation refers to which complaint?',o:['Delivery delayed 3 days','CS contacted 3+ times','Social media tagging leadership','Refund request without RTO'],a:2},
+  {m:'C',t:'CX',q:'APF in ERP context stands for?',o:['Attempt Processing Framework','Attempt to Prioritization Framework','Allocation Planning Function','Attempt Performance Flag'],a:1},
+  {m:'R',t:'Reliability',q:'Formula for CPD Breach %?',o:['(Attempted / Total CPD) x 100','(Un-attempted + hub dependency / Total CPD) x 100','(Delivered / OFD) x 100','(Breach / OFD) x 100'],a:1},
+  {m:'R',t:'Reliability',q:'EMO — Early Morning OFD — measures?',o:['Deliveries before noon','Shipments assigned to WM before 10 AM','WMs reporting before 8 AM','Runsheets after 10 AM'],a:1},
+  {m:'R',t:'Reliability',q:'What is a Repromise Breach?',o:['Delivery outside work hours','Misses CPD AND fails within 48-72 hr repromise window','Returned without attempt','Held at hub 5+ days'],a:1},
+  {m:'R',t:'Reliability',q:'ZRS — Zero Run Sheet — refers to?',o:['Runsheet with 0 shipments','Shipments in 1 runsheet with 0% conversion','WM with no runsheet','Hub with 0 shipments'],a:1}
 ];
+var TC={L:'tL',C:'tC',R:'tR'};
+var qs=[],ci=0,sc=0,wc=0,ti=null,tl=20,tt=0,done=false,cu={},wq=[],ar=[];
+var mSc={L:0,C:0,R:0},mTot={L:0,C:0,R:0}; // module scores
 
-var tagClass={loss:'t-loss',cx:'t-cx',rel:'t-rel'};
-var questions=[],cur=0,score=0,wrongCount=0,timerInt=null,timeLeft=20,totalTime=0,answered=false;
-var currentUser={};
-var wrongQs=[];
+function filterHubs(val){
+  var drop=document.getElementById('hub-drop');
+  var sel=document.getElementById('f-hb');
+  drop.style.display='block';
+  var opts=sel.options;
+  var v=val.toLowerCase();
+  for(var i=1;i<opts.length;i++){
+    var show=opts[i].value.toLowerCase().indexOf(v)>-1;
+    opts[i].style.display=show?'':'none';
+  }
+}
+function showDrop(){document.getElementById('hub-drop').style.display='block';}
+function selectHub(v){
+  if(!v)return;
+  document.getElementById('f-hb-val').value=v;
+  document.getElementById('f-hb-search').value=v;
+  document.getElementById('hub-drop').style.display='none';
+}
+document.addEventListener('click',function(e){
+  var d=document.getElementById('hub-drop');
+  var s=document.getElementById('f-hb-search');
+  if(d&&s&&e.target!==d&&e.target!==s&&!d.contains(e.target)){d.style.display='none';}
+});
+function go(id){
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.remove('on');});
+  document.getElementById(id).classList.add('on');
+}
 
-function getRecords(){try{return JSON.parse(localStorage.getItem('elevate_records')||'[]');}catch(e){return[];}}
-function saveRecords(r){localStorage.setItem('elevate_records',JSON.stringify(r));}
+function se(id,msg){var el=document.getElementById(id);el.textContent=msg;el.style.display='block';}
 
-function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});document.getElementById(id).classList.add('active');}
-
-function registerUser(){
-  var id=document.getElementById('reg-id').value.trim();
-  var name=document.getElementById('reg-name').value.trim();
-  var hub=document.getElementById('reg-hub').value.trim();
+// Local backup — dual layer duplicate blocking
+function localAttempted(id){
+  try{var a=JSON.parse(localStorage.getItem('elv_done')||'{}');return a[id.toUpperCase().trim()]||null;}catch(e){return null;}
+}
+function localMarkDone(id,nm,hb,score,grade,date,time){
+  try{
+    var a=JSON.parse(localStorage.getItem('elv_done')||'{}');
+    a[id.toUpperCase().trim()]={name:nm,hub:hb,score:score,grade:grade,date:date,time:time};
+    localStorage.setItem('elv_done',JSON.stringify(a));
+  }catch(e){}
+}
+function doReg(){
+  var id=document.getElementById('f-id').value.trim();
+  var nm=document.getElementById('f-nm').value.trim();
+  var hb=document.getElementById('f-hb-val').value.trim();
   var ok=true;
-  document.getElementById('err-id').style.display='none';
-  document.getElementById('err-name').style.display='none';
-  document.getElementById('err-hub').style.display='none';
-  if(!id){document.getElementById('err-id').style.display='block';ok=false;}
-  if(!name){document.getElementById('err-name').style.display='block';ok=false;}
-  if(!hub){document.getElementById('err-hub').style.display='block';ok=false;}
-  if(!ok) return;
-  currentUser={id:id,name:name,hub:hub,startTime:new Date().toLocaleString()};
-  document.getElementById('player-card').innerHTML='<strong>ID:</strong> '+id+'&nbsp;&nbsp;|&nbsp;&nbsp;<strong>Name:</strong> '+name+'&nbsp;&nbsp;|&nbsp;&nbsp;<strong>Hub:</strong> '+hub;
-  show('start-screen');
-}
-
-function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
-
-function startGame(){
-  questions=shuffle(allQ);
-  cur=0;score=0;wrongCount=0;totalTime=0;wrongQs=[];
-  show('quiz-screen');
-  renderQ();
-}
-
-function renderQ(){
-  var q=questions[cur];
-  answered=false;
-  document.getElementById('prog').style.width=Math.round((cur/15)*100)+'%';
-  document.getElementById('q-counter').textContent=(cur+1)+' / 15';
-  document.getElementById('mod-tag-wrap').innerHTML='<span class="mod-tag '+tagClass[q.mod]+'">'+q.tag+'</span>';
-  document.getElementById('q-text').textContent=q.q;
-  var nb=document.getElementById('next-btn');
-  nb.disabled=true;
-  nb.textContent=cur===14?'See Results':'Next Question';
-  var keys=['A','B','C','D'];
-  var opts=document.getElementById('opts');
-  opts.innerHTML='';
-  q.opts.forEach(function(o,i){
-    var btn=document.createElement('button');
-    btn.className='opt-btn';
-    btn.innerHTML='<span class="opt-key">'+keys[i]+'.</span><span>'+o+'</span>';
-    btn.onclick=function(){selectAns(i,btn)};
-    opts.appendChild(btn);
-  });
-  startTimer();
-}
-
-function startTimer(){
-  clearInterval(timerInt);timeLeft=20;updateTimer();
-  timerInt=setInterval(function(){
-    timeLeft--;totalTime++;updateTimer();
-    if(timeLeft<=0){clearInterval(timerInt);if(!answered)timeUp();}
-  },1000);
-}
-
-function updateTimer(){
-  var el=document.getElementById('timer');
-  el.textContent=timeLeft+'s';
-  if(timeLeft<=5)el.classList.add('warn');
-  else el.classList.remove('warn');
-}
-
-function selectAns(i,btn){
-  if(answered)return;
-  answered=true;clearInterval(timerInt);totalTime+=(20-timeLeft);
-  var q=questions[cur];
-  var btns=document.querySelectorAll('.opt-btn');
-  btns.forEach(function(b){b.disabled=true});
-  if(i===q.ans){
-    btn.classList.add('correct');
-    score++;
-  } else {
-    btn.classList.add('wrong');
-    wrongCount++;
-    wrongQs.push(q.q);
-  }
-  document.getElementById('next-btn').disabled=false;
-}
-
-function timeUp(){
-  answered=true;wrongCount++;
-  var q=questions[cur];
-  wrongQs.push(q.q+' [Time Up]');
-  var btns=document.querySelectorAll('.opt-btn');
-  btns.forEach(function(b){b.disabled=true});
-  document.getElementById('next-btn').disabled=false;
-}
-
-function nextQ(){cur++;if(cur>=15){showResult();return;}renderQ();}
-
-function getGrade(s){
-  if(s>=13)return'A';
-  if(s>=10)return'B';
-  if(s>=7)return'C';
-  return'D';
-}
-
-function showResult(){
-  clearInterval(timerInt);
-  var pct=Math.round((score/15)*100);
-  var grade=getGrade(score);
-  var avgTime=Math.round(totalTime/15);
-
-  var record={
-    id:currentUser.id,
-    name:currentUser.name,
-    hub:currentUser.hub,
-    date:currentUser.startTime,
-    score:score,
-    wrong:wrongCount,
-    pct:pct,
-    grade:grade,
-    avgTime:avgTime,
-    wrongQs:wrongQs.join(' | ')
-  };
-  var records=getRecords();
-  records.push(record);
-  saveRecords(records);
-
-  show('result-screen');
-  document.getElementById('score-big').textContent=score+' / 15';
-  document.getElementById('res-correct').textContent=score;
-  document.getElementById('res-wrong').textContent=wrongCount;
-
-  var title,sub,icon;
-  if(score>=13){icon='🏆';title='Outstanding!';sub='You are an Operational Hero — excellent knowledge!';}
-  else if(score>=10){icon='🥇';title='Excellent work!';sub='Strong performance — keep it up!';}
-  else if(score>=7){icon='🥈';title='Good effort!';sub='Solid base — review the missed topics.';}
-  else{icon='📚';title='Keep learning!';sub='Revisit the modules and try again!';}
-  document.getElementById('trophy-icon').textContent=icon;
-  document.getElementById('result-title').textContent=title;
-  document.getElementById('result-sub').textContent=sub;
-
-  var badgeRow=document.getElementById('badge-row');
-  badgeRow.innerHTML='';
-  if(score>=13){addBadge(badgeRow,'Top Scorer','b-gold');}
-  if(wrongCount===0){addBadge(badgeRow,'Zero Mistakes','b-green');}
-  if(avgTime<=10){addBadge(badgeRow,'Speed Master','b-blue');}
-  if(pct>=80){addBadge(badgeRow,'Operational Hero','b-gold');}
-}
-
-function addBadge(row,txt,cls){
-  var b=document.createElement('span');
-  b.className='badge '+cls;
-  b.textContent=txt;
-  row.appendChild(b);
-}
-
-function goHome(){
-  document.getElementById('reg-id').value='';
-  document.getElementById('reg-name').value='';
-  document.getElementById('reg-hub').value='';
-  show('reg-screen');
-}
-
-function showAdminLogin(){
-  document.getElementById('admin-pass').value='';
-  document.getElementById('al-err').style.display='none';
-  show('admin-login-screen');
-}
-
-function checkAdminPass(){
-  var p=document.getElementById('admin-pass').value;
-  if(p===ADMIN_PASS){
-    document.getElementById('al-err').style.display='none';
-    loadAdminDashboard();
-    show('admin-screen');
-  } else {
-    document.getElementById('al-err').style.display='block';
-  }
-}
-
-function loadAdminDashboard(){
-  var records=getRecords();
-  var total=records.length;
-  var avgScore=total?Math.round(records.reduce(function(s,r){return s+r.score;},0)/total):0;
-  var topScore=total?Math.max.apply(null,records.map(function(r){return r.score;})):0;
-  var passing=records.filter(function(r){return r.score>=10;}).length;
-
-  document.getElementById('admin-summary').innerHTML=
-    '<div class="sum-box"><div class="sum-val">'+total+'</div><div class="sum-lbl">Total players</div></div>'+
-    '<div class="sum-box"><div class="sum-val">'+avgScore+'/15</div><div class="sum-lbl">Avg score</div></div>'+
-    '<div class="sum-box"><div class="sum-val">'+passing+'</div><div class="sum-lbl">Passed (10+)</div></div>';
-
-  if(total===0){
-    document.getElementById('admin-table').innerHTML='<div class="empty-state">No records yet. Share the quiz with your team!</div>';
+  ['e-id','e-nm','e-hb'].forEach(function(x){document.getElementById(x).style.display='none';});
+  if(!id){se('e-id','Please enter your Employee ID.');ok=false;}
+  if(!nm){se('e-nm','Please enter your full name.');ok=false;}
+  if(!hb){se('e-hb','Please select your hub from the dropdown.');ok=false;}
+  if(!ok)return;
+  // LAYER 1: instant local check — no server needed
+  var local=localAttempted(id);
+  if(local){
+    document.getElementById('alx').innerHTML=
+      '<b>ID:</b> '+id+'<br><b>Name:</b> '+(local.name||'')+
+      '<br><b>Hub:</b> '+(local.hub||'')+
+      '<br><b>Date/Time:</b> '+(local.date||'')+' '+(local.time||'')+
+      '<br><b>Score:</b> '+(local.score||'')+' — Grade: '+(local.grade||'');
+    go('p-al');
     return;
   }
+  // LAYER 2: server check — catches other devices
+  var btn=document.getElementById('rbtn');
+  btn.disabled=true;btn.textContent='Checking...';
+  google.script.run
+    .withSuccessHandler(function(r){
+      btn.disabled=false;btn.textContent='Proceed to Quiz';
+      if(r&&r.attempted){
+        localMarkDone(id,r.name,r.hub,r.score,r.grade,r.date,r.time);
+        document.getElementById('alx').innerHTML=
+          '<b>ID:</b> '+id+'<br><b>Name:</b> '+(r.name||'')+
+          '<br><b>Hub:</b> '+(r.hub||'')+
+          '<br><b>Date/Time:</b> '+(r.date||'')+' '+(r.time||'')+
+          '<br><b>Score:</b> '+(r.score||'')+' — Grade: '+(r.grade||'');
+        go('p-al');
+      } else {
+        var now=new Date();
+        cu={id:id,nm:nm,hb:hb,
+            dt:now.toLocaleDateString('en-IN'),
+            tm:now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+        document.getElementById('pcrd').innerHTML=
+          '<b>ID:</b> '+id+'<br><b>Name:</b> '+nm+'<br><b>Hub:</b> '+hb;
+        go('p-st');
+      }
+    })
+    .withFailureHandler(function(e){
+      btn.disabled=false;btn.textContent='Proceed to Quiz';
+      alert('Server error. Please try again.\n'+(e.message||''));
+    })
+    .checkAttempted(id);
+}
 
-  var gradeClass={A:'g-a',B:'g-b',C:'g-c',D:'g-d'};
-  var rows=records.map(function(r,i){
+
+function shuf(a){var x=a.slice();for(var i=x.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=x[i];x[i]=x[j];x[j]=t;}return x;}
+
+function startGame(){qs=shuf(QS);ci=0;sc=0;wc=0;tt=0;wq=[];mSc={L:0,C:0,R:0};mTot={L:0,C:0,R:0};go('p-qz');renderQ();}
+
+function renderQ(){
+  var q=qs[ci];done=false;
+  document.getElementById('pf').style.width=Math.round((ci/15)*100)+'%';
+  document.getElementById('qn').textContent=(ci+1)+'/15';
+  document.getElementById('tg').innerHTML='<span class="tag '+TC[q.m]+'">'+q.t+'</span>';
+  document.getElementById('qt').textContent=q.q;
+  var nb=document.getElementById('nb');
+  nb.disabled=true;nb.textContent=ci===14?'See Results':'Next Question';
+  var K=['A','B','C','D'];
+  var og=document.getElementById('og');og.innerHTML='';
+  q.o.forEach(function(ot,i){
+    var b=document.createElement('button');b.className='ob';
+    b.innerHTML='<span class="ok">'+K[i]+'.</span><span>'+ot+'</span>';
+    b.onclick=function(){pick(i,b);};og.appendChild(b);
+  });
+  startTmr();
+}
+
+function startTmr(){clearInterval(ti);tl=20;updTmr();
+  ti=setInterval(function(){tl--;tt++;updTmr();if(tl<=0){clearInterval(ti);if(!done)tUp();}},1000);}
+
+function updTmr(){var el=document.getElementById('tm');el.textContent=tl+'s';el.className=tl<=5?'tm red':'tm';}
+
+function pick(i,btn){
+  if(done)return;done=true;clearInterval(ti);tt+=(20-tl);
+  var q=qs[ci];
+  document.querySelectorAll('.ob').forEach(function(b){b.disabled=true;});
+  mTot[q.m]=(mTot[q.m]||0)+1;
+  if(i===q.a){btn.classList.add('okc');sc++;mSc[q.m]=(mSc[q.m]||0)+1;}
+  else{btn.classList.add('okw');wc++;wq.push('Q'+(ci+1)+': '+q.q);}
+  document.getElementById('nb').disabled=false;
+}
+
+function tUp(){done=true;wc++;
+  var q=qs[ci];mTot[q.m]=(mTot[q.m]||0)+1;
+  wq.push('Q'+(ci+1)+': '+q.q+' [Time Up]');
+  document.querySelectorAll('.ob').forEach(function(b){b.disabled=true;});
+  document.getElementById('nb').disabled=false;}
+
+function nxtQ(){ci++;if(ci>=15){showRes();return;}renderQ();}
+
+function grd(s){return s>=13?'A':s>=10?'B':s>=7?'C':'D';}
+
+function showRes(){
+  clearInterval(ti);
+  var pct=Math.round((sc/15)*100);
+  var gd=grd(sc);
+  var avg=Math.round(tt/15);
+  var ls=mSc['L']||0; var lt=mTot['L']||6;
+  var cs=mSc['C']||0; var ct=mTot['C']||5;
+  var rs2=mSc['R']||0; var rt=mTot['R']||4;
+  var rec={empId:cu.id,name:cu.nm,hub:cu.hb,date:cu.dt,time:cu.tm,
+           score:sc,pct:pct,grade:gd,correct:sc,wrong:wc,avgSec:avg,
+           lossScore:ls,cxScore:cs,relScore:rs2,missed:wq.join(' | '),photoUrl:cu.photoUrl||''};
+  google.script.run
+    .withSuccessHandler(function(){
+      localMarkDone(rec.empId,rec.name,rec.hub,rec.score+'/15',rec.grade,rec.date,rec.time);
+    })
+    .withFailureHandler(function(){})
+    .saveResult(rec);
+  go('p-rs');
+  document.getElementById('rb').textContent=sc+' / 15';
+  document.getElementById('rc').textContent=sc;
+  document.getElementById('rw').textContent=wc;
+  document.getElementById('pf').style.width='100%';
+  // Module breakdown bars
+  var mb=document.getElementById('mod-breakdown');
+  if(mb){
+    mb.innerHTML=
+      modBar('Loss',ls,lt,'#e05c5c')+
+      modBar('Customer Experience',cs,ct,'#1a56db')+
+      modBar('Reliability',rs2,rt,'#1a7f4b');
+  }
+  var icon,ttl,sub;
+  if(sc>=13){icon='\u{1F3C6}';ttl='Outstanding!';sub='You are an Operational Hero!';}
+  else if(sc>=10){icon='\u{1F947}';ttl='Excellent work!';sub='Strong performance — keep it up!';}
+  else if(sc>=7){icon='\u{1F948}';ttl='Good effort!';sub='Solid base — review the missed topics.';}
+  else{icon='\u{1F4DA}';ttl='Keep learning!';sub='Revisit the modules and try again!';}
+  document.getElementById('tp').textContent=icon;
+  document.getElementById('rl').textContent=ttl;
+  document.getElementById('rs').textContent=sub;
+  var br=document.getElementById('bds');br.innerHTML='';
+  if(sc>=13)ab(br,'Top Scorer','bg');
+  if(wc===0)ab(br,'Zero Mistakes','bb');
+  if(avg<=10)ab(br,'Speed Master','bc');
+  if(pct>=80)ab(br,'Operational Hero','bg');
+  // Store result for certificate
+  window._lastResult={name:cu.nm,id:cu.id,hub:cu.hb,score:sc,pct:pct,grade:gd,date:cu.dt,ls:ls,lt:lt,cs:cs,ct:ct,rs:rs2,rt:rt};
+}
+
+function modBar(label,got,total,color){
+  var pct=total>0?Math.round((got/total)*100):0;
+  return '<div style="margin-bottom:10px">'+
+    '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">'+
+    '<span style="font-weight:700;color:#333">'+label+'</span>'+
+    '<span style="color:'+color+';font-weight:700">'+got+'/'+total+' ('+pct+'%)</span></div>'+
+    '<div style="height:8px;background:#eee;border-radius:4px;overflow:hidden">'+
+    '<div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:4px;transition:width .6s"></div>'+
+    '</div></div>';
+}
+
+function ab(row,txt,cls){var b=document.createElement('span');b.className='bdg '+cls;b.textContent=txt;row.appendChild(b);}
+
+function newAtt(){cu={};['f-id','f-nm','f-hb'].forEach(function(x){document.getElementById(x).value='';});
+  ['e-id','e-nm','e-hb'].forEach(function(x){document.getElementById(x).style.display='none';});go('p-reg');}
+
+function goAdmin(){document.getElementById('ap').value='';document.getElementById('ae').style.display='none';go('p-alog');}
+
+function doLogin(){
+  var raw=document.getElementById('ap').value;
+  var p=raw.trim();
+  if(!p){showAE('Please enter password.');return;}
+  var btn=document.getElementById('alb');
+  btn.disabled=true;btn.textContent='Loading...';
+  // Send the password as a plain string — no encoding
+  google.script.run
+    .withSuccessHandler(function(r){
+      btn.disabled=false;btn.textContent='Login';
+      if(r&&r.ok===true){
+        ar=r.rows||[];renderAdm(ar);go('p-adm');
+      } else {
+        // Show full server message so we can debug
+        var msg=r?JSON.stringify(r):'null response';
+        showAE('Server says: '+msg);
+      }
+    })
+    .withFailureHandler(function(e){
+      btn.disabled=false;btn.textContent='Login';
+      showAE('Error: '+(e.message||JSON.stringify(e)));
+    })
+    .getReport(p);
+}
+
+function showAE(msg){var el=document.getElementById('ae');el.textContent=msg;el.style.display='block';}
+
+function renderAdm(rows){
+  var tot=rows.length;
+  var avgS=tot?+(rows.reduce(function(s,r){return s+(parseFloat(r['Score'])||0);},0)/tot).toFixed(1):0;
+  var pass=rows.filter(function(r){return(parseFloat(r['Score'])||0)>=10;}).length;
+  var avgP=tot?Math.round(rows.reduce(function(s,r){var pv=parseFloat(String(r['Percent']||'0').replace('%','').trim());if(!isNaN(pv)&&pv<1&&pv>0)pv=Math.round(pv*100);return s+(isNaN(pv)?0:pv);},0)/tot):0;
+  document.getElementById('sg').innerHTML=
+    mk(tot,'Players')+mk(avgS+'/15','Avg Score')+mk(pass,'Passed (10+)')+mk(avgP+'%','Avg %');
+  if(tot===0){document.getElementById('tw').innerHTML='<div class="empty">No records yet. Play a game first!</div>';return;}
+  var gc={A:'ga',B:'gb',C:'gc',D:'gd'};
+  var s20=rows.slice(-20).reverse();
+  var rws=s20.map(function(r){
+    var g=String(r['Grade']||'D');
     return '<tr>'+
-      '<td>'+(i+1)+'</td>'+
-      '<td><strong>'+r.id+'</strong></td>'+
-      '<td>'+r.name+'</td>'+
-      '<td>'+r.hub+'</td>'+
-      '<td>'+r.date+'</td>'+
-      '<td style="text-align:center"><strong>'+r.score+'/15</strong></td>'+
-      '<td style="text-align:center">'+r.pct+'%</td>'+
-      '<td style="text-align:center"><span class="grade-pill '+gradeClass[r.grade]+'">'+r.grade+'</span></td>'+
-      '<td style="text-align:center">'+r.wrong+'</td>'+
-      '<td style="text-align:center">'+r.avgTime+'s</td>'+
+      '<td><b>'+ex(r['EmpID'])+'</b></td>'+
+      '<td>'+ex(r['Name'])+'</td>'+
+      '<td>'+ex(r['Hub'])+'</td>'+
+      '<td>'+ex(r['Date'])+'</td>'+
+      '<td>'+ex(r['Time'])+'</td>'+
+      '<td style="font-weight:700;text-align:center">'+ex(r['Score'])+'/15</td>'+
+      '<td style="text-align:center">'+(function(){var p=parseFloat(r['Percent']||0);return (p<1&&p>0?(p*100).toFixed(0):p.toFixed(0))+'%'})()+'</td>'+
+      '<td style="text-align:center"><span class="gp '+gc[g]+'">'+g+'</span></td>'+
       '</tr>';
   }).join('');
-
-  document.getElementById('admin-table').innerHTML=
+  document.getElementById('tw').innerHTML=
     '<table><thead><tr>'+
-    '<th>#</th><th>Emp ID</th><th>Name</th><th>Hub</th><th>Date & Time</th>'+
-    '<th>Score</th><th>%</th><th>Grade</th><th>Wrong</th><th>Avg Time</th>'+
-    '</tr></thead><tbody>'+rows+'</tbody></table>';
+    '<th>Emp ID</th><th>Name</th><th>Hub</th><th>Date</th><th>Time</th><th>Score</th><th>%</th><th>Grade</th>'+
+    '</tr></thead><tbody>'+rws+'</tbody></table>'+
+    (tot>20?'<p style="font-size:11px;color:#bbb;text-align:center;padding:8px">Showing last 20 of '+tot+' total. Open Google Sheet for all.</p>':'');
 }
 
-function exportCSV(){
-  var records=getRecords();
-  if(records.length===0){alert('No data to export.');return;}
-  var headers=['#','Emp ID','Name','Hub','Date & Time','Score','Percentage','Grade','Wrong Answers','Avg Time','Missed Questions'];
-  var rows=records.map(function(r,i){
-    return [i+1,r.id,r.name,r.hub,r.date,r.score+'/15',r.pct+'%',r.grade,r.wrong,r.avgTime+'s','"'+r.wrongQs+'"'].join(',');
-  });
-  var csv=headers.join(',')+'\n'+rows.join('\n');
-  var blob=new Blob([csv],{type:'text/csv'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;
-  a.download='Project_ELEVATE_Results_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-}
+function mk(v,l){return '<div class="sb"><div class="sv">'+v+'</div><div class="sk">'+l+'</div></div>';}
+function ex(v){return String(v||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-function clearData(){
-  if(confirm('Are you sure you want to delete ALL player records? This cannot be undone.')){
-    localStorage.removeItem('elevate_records');
-    loadAdminDashboard();
+function openSh(){google.script.run.withSuccessHandler(function(url){if(url)window.open(url,'_blank');}).getUrl();}
+
+// ── CAMERA FUNCTIONS ──
+var camStream = null;
+var photoDataUrl = null;
+
+function openCamera(){
+  go('p-cam');
+  photoDataUrl = null;
+  // Reset UI
+  document.getElementById('cam-preview').style.display='none';
+  document.getElementById('cam-box').style.display='none';
+  document.getElementById('snap-btn').style.display='none';
+  document.getElementById('retake-btn').style.display='none';
+  document.getElementById('cam-proceed').style.display='none';
+  document.getElementById('upload-area').style.display='none';
+  document.getElementById('cam-status').textContent='⏳ Starting camera...';
+  document.getElementById('cam-status').style.color='#888';
+
+  // Check permission state first
+  if(navigator.permissions){
+    navigator.permissions.query({name:'camera'})
+      .then(function(ps){
+        startCameraStream();
+      })
+      .catch(function(){
+        startCameraStream();
+      });
+  } else {
+    startCameraStream();
   }
 }
+
+function startCameraStream(){
+  var constraints = {
+    video: {
+      facingMode: {ideal:'user'},
+      width: {ideal:640},
+      height: {ideal:480}
+    },
+    audio: false
+  };
+  // Try with constraints first
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then(function(stream){
+      gotStream(stream);
+    })
+    .catch(function(err1){
+      // Try with minimal constraints
+      navigator.mediaDevices.getUserMedia({video:true, audio:false})
+        .then(function(stream){
+          gotStream(stream);
+        })
+        .catch(function(err2){
+          document.getElementById('cam-status').textContent='Camera blocked. Please allow camera from address bar and refresh.';
+          document.getElementById('cam-status').style.color='#c33';
+          document.getElementById('upload-area').style.display='block';
+        });
+    });
+}
+
+function gotStream(stream){
+  camStream = stream;
+  var v = document.getElementById('cam-video');
+  v.srcObject = stream;
+  document.getElementById('cam-box').style.display='block';
+  document.getElementById('snap-btn').style.display='block';
+  document.getElementById('cam-status').textContent='📷 Position your face clearly and click the camera button';
+  document.getElementById('cam-status').style.color='#1a3a6e';
+  v.play().catch(function(){});
+}
+
+function showUploadFallback(){
+  document.getElementById('cam-box').style.display='none';
+  document.getElementById('snap-btn').style.display='none';
+  document.getElementById('upload-area').style.display='block';
+  document.getElementById('cam-status').textContent='';
+}
+
+function retryCam(){
+  document.getElementById('upload-area').style.display='none';
+  document.getElementById('cam-status').textContent='⏳ Retrying camera...';
+  document.getElementById('cam-status').style.color='#888';
+  startCameraStream();
+}
+
+function snapPhoto(){
+  var video=document.getElementById('cam-video');
+  var canvas=document.getElementById('cam-canvas');
+  var preview=document.getElementById('cam-preview');
+  canvas.width=video.videoWidth||320;
+  canvas.height=video.videoHeight||240;
+  canvas.getContext('2d').drawImage(video,0,0);
+  photoDataUrl=canvas.toDataURL('image/jpeg',0.85);
+  preview.src=photoDataUrl;
+  preview.style.display='block';
+  document.getElementById('cam-box').style.display='none';
+  document.getElementById('snap-btn').style.display='none';
+  document.getElementById('retake-btn').style.display='block';
+  document.getElementById('cam-proceed').style.display='block';
+  document.getElementById('cam-status').textContent='✅ Photo captured! Confirm to start quiz.';
+  document.getElementById('cam-status').style.color='#1a7f4b';
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
+}
+
+function retakePhoto(){
+  photoDataUrl=null;
+  document.getElementById('cam-preview').style.display='none';
+  document.getElementById('retake-btn').style.display='none';
+  document.getElementById('cam-proceed').style.display='none';
+  openCamera();
+}
+
+function goBackFromCam(){
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
+  go('p-st');
+}
+
+function proceedAfterPhoto(){
+  // MANDATORY — block if no photo
+  if(!photoDataUrl){
+    document.getElementById('cam-status').textContent='⚠️ Photo is mandatory. Please take or upload a photo first.';
+    document.getElementById('cam-status').style.color='#c33';
+    return;
+  }
+  if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}
+  // Save photo to Drive in background
+  if(cu.id){
+    google.script.run
+      .withSuccessHandler(function(r){if(r&&r.url)cu.photoUrl=r.url;})
+      .withFailureHandler(function(){})
+      .savePhoto(cu.id,cu.nm,cu.hb,photoDataUrl);
+  }
+  startGame();
+}
+
+function showLeaderboard(){
+  var lb=document.getElementById('lb-table');
+  lb.innerHTML='<div style="text-align:center;padding:20px;color:#888;font-size:13px">⏳ Loading leaderboard...</div>';
+  go('p-lb');
+  // Use getReport with admin pwd to fetch leaderboard data
+  google.script.run
+    .withSuccessHandler(function(r){
+      if(!r||!r.ok||!r.rows||r.rows.length===0){
+        lb.innerHTML='<div style="text-align:center;padding:20px;color:#bbb;font-size:13px">No data yet. Be the first to play!</div>';
+        return;
+      }
+      // Sort by score descending
+      var sorted=r.rows.slice().sort(function(a,b){
+        return (parseFloat(b['Score'])||0)-(parseFloat(a['Score'])||0);
+      });
+      var top20=sorted.slice(0,20);
+      var medals=['🥇','🥈','🥉'];
+      var gc={A:'ga',B:'gb',C:'gc',D:'gd'};
+      var rows=top20.map(function(row,i){
+        var medal=i<3?'<span style="font-size:18px">'+medals[i]+'</span>':'<b style="font-size:12px;color:#999">#'+(i+1)+'</b>';
+        var g=String(row['Grade']||'D');
+        var sc=String(row['Score']||'0');
+        var nm=String(row['Name']||'');
+        var hb=String(row['Hub']||'');
+        var isMe=window._lastResult&&nm.toUpperCase()===window._lastResult.name.toUpperCase();
+        return '<tr style="'+(isMe?'background:#fff8f0;border-left:3px solid #F77F00;':'')+'">'+
+          '<td style="text-align:center;padding:10px 6px">'+medal+'</td>'+
+          '<td style="padding:10px 6px"><b>'+ex(nm)+'</b>'+(isMe?' <span style="font-size:10px;color:#F77F00;font-weight:700">YOU</span>':'')+'</td>'+
+          '<td style="font-size:11px;color:#888;padding:10px 6px">'+ex(hb)+'</td>'+
+          '<td style="font-weight:700;text-align:center;color:#F77F00;padding:10px 6px">'+ex(sc)+'/15</td>'+
+          '<td style="text-align:center;padding:10px 6px"><span class="gp '+gc[g]+'">'+g+'</span></td>'+
+          '</tr>';
+      }).join('');
+      lb.innerHTML='<div class="tw" style="max-height:400px"><table><thead><tr>'+
+        '<th style="text-align:center">#</th><th>Name</th><th>Hub</th><th>Score</th><th>Grade</th>'+
+        '</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+        (sorted.length>20?'<p style="font-size:11px;color:#bbb;text-align:center;padding:8px">Showing top 20 of '+sorted.length+' players</p>':'');
+    })
+    .withFailureHandler(function(e){
+      lb.innerHTML='<div style="text-align:center;padding:20px;color:#c33;font-size:13px">⚠️ Failed to load. Please try again.<br><small>'+(e&&e.message?e.message:'')+'</small></div>';
+    })
+    .getReport('ELEVATE2026');
+}
+
+function downloadCert(){
+  var d=window._lastResult;
+  if(!d){alert('Result not available.');return;}
+  var canvas=document.createElement('canvas');
+  canvas.width=900;canvas.height=620;
+  var ctx=canvas.getContext('2d');
+  // Background
+  ctx.fillStyle='#fff8f0';
+  ctx.fillRect(0,0,900,620);
+  // Orange top bar
+  ctx.fillStyle='#F77F00';
+  ctx.fillRect(0,0,900,12);
+  // Navy bottom bar
+  ctx.fillStyle='#1a3a6e';
+  ctx.fillRect(0,608,900,12);
+  // Border
+  ctx.strokeStyle='#F77F00';
+  ctx.lineWidth=3;
+  ctx.strokeRect(20,20,860,580);
+  ctx.strokeStyle='#ffd8a8';
+  ctx.lineWidth=1;
+  ctx.strokeRect(28,28,844,564);
+  // FK Logo circle
+  ctx.fillStyle='#F77F00';
+  ctx.beginPath();ctx.arc(450,90,42,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.font='bold 26px Arial';
+  ctx.textAlign='center';
+  ctx.fillText('FK',450,100);
+  // Title
+  ctx.fillStyle='#1a3a6e';
+  ctx.font='bold 15px Arial';
+  ctx.textAlign='center';
+  ctx.fillText('PROJECT ELEVATE',450,155);
+  ctx.fillStyle='#888';
+  ctx.font='12px Arial';
+  ctx.fillText('Enhancing Learning & Execution Via Ability, Training & Empowerment',450,175);
+  // Certificate of Completion
+  ctx.fillStyle='#F77F00';
+  ctx.font='bold 13px Arial';
+  ctx.fillText('CERTIFICATE OF COMPLETION',450,215);
+  // Divider
+  ctx.strokeStyle='#ffd8a8';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(150,228);ctx.lineTo(750,228);ctx.stroke();
+  // This is to certify
+  ctx.fillStyle='#555';
+  ctx.font='13px Arial';
+  ctx.fillText('This is to certify that',450,258);
+  // Name
+  ctx.fillStyle='#111';
+  ctx.font='bold 30px Arial';
+  ctx.fillText(d.name.toUpperCase(),450,300);
+  // Underline
+  var nw=ctx.measureText(d.name.toUpperCase()).width;
+  ctx.strokeStyle='#F77F00';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(450-nw/2,308);ctx.lineTo(450+nw/2,308);ctx.stroke();
+  // Details
+  ctx.fillStyle='#555';
+  ctx.font='13px Arial';
+  ctx.fillText('has successfully completed the Project ELEVATE Knowledge Quiz',450,338);
+  // Score box
+  ctx.fillStyle='#fff';
+  ctx.strokeStyle='#F77F00';ctx.lineWidth=1.5;
+  roundRect(ctx,280,358,340,72,10);
+  ctx.fillStyle='#F77F00';
+  ctx.font='bold 32px Arial';
+  ctx.fillText(d.score+' / 15',450,392);
+  ctx.fillStyle='#888';
+  ctx.font='11px Arial';
+  ctx.fillText('Score  |  '+d.pct+'%  |  Grade: '+d.grade,450,415);
+  // Hub & ID
+  ctx.fillStyle='#333';
+  ctx.font='12px Arial';
+  ctx.fillText('Hub: '+d.hub+'   |   Emp ID: '+d.id,450,448);
+  // Date
+  ctx.fillStyle='#888';
+  ctx.font='11px Arial';
+  ctx.fillText('Date: '+d.date,450,470);
+  // Module breakdown
+  var mods=[['Loss',d.ls,d.lt,'#e05c5c'],['CX',d.cs,d.ct,'#1a56db'],['Reliability',d.rs,d.rt,'#1a7f4b']];
+  var bx=180;
+  mods.forEach(function(m){
+    ctx.fillStyle='#f5f5f5';
+    roundRect(ctx,bx,490,170,60,8);
+    ctx.fillStyle=m[3];
+    ctx.font='bold 16px Arial';
+    ctx.textAlign='center';
+    ctx.fillText(m[1]+'/'+m[2],bx+85,520);
+    ctx.fillStyle='#555';
+    ctx.font='10px Arial';
+    ctx.fillText(m[0],bx+85,540);
+    bx+=180;
+  });
+  // Footer
+  ctx.fillStyle='#F77F00';
+  ctx.font='bold 11px Arial';
+  ctx.textAlign='center';
+  ctx.fillText('Flipkart Supply Chain  ·  SB-II Region  ·  Project ELEVATE',450,588);
+  // Download
+  var link=document.createElement('a');
+  link.download='ELEVATE_Certificate_'+d.name.replace(/ /g,'_')+'.png';
+  link.href=canvas.toDataURL('image/png');
+  link.click();
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+  ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);
+  ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+  ctx.fill();ctx.stroke();
+}
+
+function doCSV(){
+  if(!ar||ar.length===0){alert('No data to export.');return;}
+  var hd=Object.keys(ar[0]);
+  var rows=ar.map(function(r){return hd.map(function(h){var v=String(r[h]||'');
+    if(v.indexOf(',')>-1||v.indexOf('"')>-1)v='"'+v.replace(/"/g,'""')+'"';return v;}).join(',');});
+  var csv='\uFEFF'+hd.join(',')+'\n'+rows.join('\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='ELEVATE_Report.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
 </script>
+<canvas id="cam-canvas"></canvas>
 </body>
 </html>
