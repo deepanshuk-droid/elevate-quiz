@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project ELEVATE — Knowledge Quiz | Flipkart</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f5f5f5;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 12px}
+.container{background:#fff;border-radius:16px;width:100%;max-width:620px;overflow:hidden;border:1px solid #e0e0e0}
+.screen{display:none;padding:28px 24px}
+.screen.active{display:block}
+
+/* REGISTER */
+.reg-logo{width:60px;height:60px;border-radius:14px;background:#F77F00;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;margin:0 auto 14px}
+.reg-title{font-size:20px;font-weight:700;color:#111;text-align:center;margin-bottom:4px}
+.reg-sub{font-size:13px;color:#888;text-align:center;margin-bottom:22px}
+.field-label{font-size:12px;font-weight:700;color:#555;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.field-wrap{margin-bottom:14px}
+.field-input{width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;color:#111;outline:none;background:#fff}
+.field-input:focus{border-color:#F77F00}
+.err-msg{font-size:12px;color:#cc3333;margin-top:4px;display:none}
+.btn-register{background:#F77F00;color:#fff;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-top:6px}
+.btn-register:hover{background:#e07000}
+.admin-link{text-align:center;margin-top:14px;font-size:12px;color:#bbb;cursor:pointer}
+.admin-link:hover{color:#888}
+
+/* START */
+.start-inner{text-align:center}
+.game-logo{width:64px;height:64px;border-radius:16px;background:#F77F00;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#fff;margin:0 auto 14px}
+.game-title{font-size:22px;font-weight:700;color:#111;margin-bottom:4px}
+.game-badge{font-size:12px;font-weight:700;color:#F77F00;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.game-sub{font-size:14px;color:#666;margin-bottom:20px;line-height:1.6}
+.player-card{background:#fff8f0;border:1px solid #ffd8a8;border-radius:10px;padding:12px 16px;margin-bottom:20px;text-align:left;font-size:13px;color:#555;line-height:1.8}
+.player-card strong{color:#111}
+.start-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px}
+.stat-box{background:#f9f9f9;border:1px solid #e8e8e8;border-radius:10px;padding:14px 8px;text-align:center}
+.stat-num{font-size:22px;font-weight:700;color:#F77F00}
+.stat-lbl{font-size:11px;color:#999;margin-top:3px}
+.btn-start{background:#F77F00;color:#fff;border:none;border-radius:10px;padding:14px 40px;font-size:16px;font-weight:700;cursor:pointer;width:100%}
+.btn-start:hover{background:#e07000}
+
+/* QUIZ */
+.top-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.progress-wrap{flex:1;height:7px;background:#f0f0f0;border-radius:4px;overflow:hidden}
+.progress-fill{height:100%;background:#F77F00;border-radius:4px;transition:width 0.4s}
+.q-counter{font-size:12px;color:#999;white-space:nowrap}
+.timer-box{background:#f9f9f9;border:1px solid #e0e0e0;border-radius:8px;padding:5px 12px;font-size:14px;font-weight:700;color:#333;min-width:54px;text-align:center}
+.timer-box.warn{background:#fff0f0;border-color:#ffb3b3;color:#cc0000}
+.mod-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:10px}
+.t-loss{background:#fff0f0;color:#cc3333}
+.t-cx{background:#e8f0ff;color:#1a56db}
+.t-rel{background:#eafaee;color:#1a7f4b}
+.q-text{font-size:15px;font-weight:700;color:#111;line-height:1.55;margin-bottom:18px;min-height:50px}
+.options-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.opt-btn{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;border:1.5px solid #e0e0e0;font-size:13px;color:#444;cursor:pointer;background:#fff;text-align:left;width:100%;line-height:1.5;transition:all 0.15s}
+.opt-btn:hover:not([disabled]){border-color:#aaa;background:#fafafa}
+.opt-key{font-weight:700;color:#999;min-width:20px;flex-shrink:0;margin-top:1px}
+
+@keyframes blinkGreen{0%{background:#eafaee;border-color:#5cb85c}50%{background:#b6f0c2;border-color:#2e9e4f}100%{background:#eafaee;border-color:#5cb85c}}
+@keyframes blinkRed{0%{background:#fff0f0;border-color:#e05c5c}50%{background:#ffc8c8;border-color:#cc1111}100%{background:#fff0f0;border-color:#e05c5c}}
+.opt-btn.correct{animation:blinkGreen 0.4s ease 3;background:#eafaee;border-color:#5cb85c;color:#1a7f4b}
+.opt-btn.correct .opt-key{color:#1a7f4b}
+.opt-btn.wrong{animation:blinkRed 0.4s ease 3;background:#fff0f0;border-color:#e05c5c;color:#cc3333}
+.opt-btn.wrong .opt-key{color:#cc3333}
+
+.next-btn{background:#F77F00;color:#fff;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;width:100%}
+.next-btn:hover:not([disabled]){background:#e07000}
+.next-btn:disabled{background:#e8e8e8;color:#aaa;cursor:default}
+
+/* RESULT */
+.result-inner{text-align:center}
+.trophy{font-size:52px;margin-bottom:12px}
+.result-title{font-size:22px;font-weight:700;color:#111;margin-bottom:6px}
+.result-sub{font-size:14px;color:#666;margin-bottom:20px;line-height:1.5}
+.score-big{font-size:52px;font-weight:700;color:#F77F00;line-height:1}
+.score-label{font-size:13px;color:#999;margin-bottom:20px;margin-top:4px}
+.result-mini{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.rm-box{background:#f9f9f9;border:1px solid #e8e8e8;border-radius:10px;padding:14px 8px;text-align:center}
+.rm-val{font-size:22px;font-weight:700}
+.rm-lbl{font-size:11px;color:#999;margin-top:3px}
+.badge-row{display:flex;justify-content:center;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px}
+.b-gold{background:#fff8e0;color:#9a6800;border:1px solid #f5d06b}
+.b-green{background:#eafaee;color:#1a7f4b;border:1px solid #a5d6a7}
+.b-blue{background:#e8f0ff;color:#1a56db;border:1px solid #90caf9}
+.replay-btn{background:#f0f0f0;color:#555;border:none;border-radius:10px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px}
+.replay-btn:hover{background:#e0e0e0}
+
+/* ADMIN */
+.admin-inner{}
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.admin-title{font-size:18px;font-weight:700;color:#111}
+.admin-close{font-size:12px;color:#F77F00;cursor:pointer;border:1px solid #F77F00;border-radius:6px;padding:4px 10px}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.sum-box{background:#f9f9f9;border:1px solid #e8e8e8;border-radius:10px;padding:12px 8px;text-align:center}
+.sum-val{font-size:20px;font-weight:700;color:#F77F00}
+.sum-lbl{font-size:11px;color:#999;margin-top:2px}
+.section-head{font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+.tbl-wrap{overflow-x:auto;margin-bottom:20px}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:480px}
+th{background:#f5f5f5;padding:8px 10px;text-align:left;font-weight:700;color:#555;border-bottom:2px solid #e0e0e0;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid #f0f0f0;color:#333;vertical-align:top}
+tr:hover td{background:#fafafa}
+.grade-pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.g-a{background:#eafaee;color:#1a7f4b}
+.g-b{background:#e8f0ff;color:#1a56db}
+.g-c{background:#fff8e0;color:#9a6800}
+.g-d{background:#fff0f0;color:#cc3333}
+.export-btn{background:#111;color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-bottom:8px}
+.export-btn:hover{background:#333}
+.clear-btn{background:#fff0f0;color:#cc3333;border:1px solid #ffb3b3;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%}
+.clear-btn:hover{background:#ffe0e0}
+
+/* ADMIN LOGIN */
+.admin-login-wrap{padding:28px 24px;text-align:center}
+.al-title{font-size:18px;font-weight:700;color:#111;margin-bottom:6px}
+.al-sub{font-size:13px;color:#888;margin-bottom:20px}
+.al-input{width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;color:#111;outline:none;margin-bottom:10px;text-align:center;letter-spacing:4px}
+.al-input:focus{border-color:#111}
+.al-btn{background:#111;color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-bottom:8px}
+.al-btn:hover{background:#333}
+.al-cancel{font-size:12px;color:#bbb;cursor:pointer;margin-top:6px;display:block}
+.al-err{font-size:12px;color:#cc3333;margin-bottom:8px;display:none}
+
+.fk-footer{text-align:center;padding:12px;border-top:1px solid #f0f0f0;font-size:11px;color:#ccc}
+.empty-state{text-align:center;padding:32px;color:#bbb;font-size:13px}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- REGISTER SCREEN -->
+  <div class="screen active" id="reg-screen">
+    <div class="reg-logo">FK</div>
+    <div class="reg-title">Project ELEVATE</div>
+    <div class="reg-sub">Enter your details to start the quiz</div>
+
+    <div class="field-wrap">
+      <div class="field-label">Employee ID</div>
+      <input class="field-input" id="reg-id" type="text" placeholder="e.g. EMP12345" maxlength="20">
+      <div class="err-msg" id="err-id">Please enter your Employee ID</div>
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">Full Name</div>
+      <input class="field-input" id="reg-name" type="text" placeholder="e.g. Rahul Kumar" maxlength="50">
+      <div class="err-msg" id="err-name">Please enter your name</div>
+    </div>
+    <div class="field-wrap">
+      <div class="field-label">Hub Name</div>
+      <input class="field-input" id="reg-hub" type="text" placeholder="e.g. MidnaporeHub_MDN" maxlength="50">
+      <div class="err-msg" id="err-hub">Please enter your hub name</div>
+    </div>
+
+    <button class="btn-register" onclick="registerUser()">Proceed to Quiz</button>
+    <div class="admin-link" onclick="showAdminLogin()">Admin Access</div>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="screen" id="start-screen">
+    <div class="start-inner">
+      <div class="game-logo">FK</div>
+      <div class="game-title">Project ELEVATE</div>
+      <div class="game-badge">Knowledge Quiz</div>
+      <div class="game-sub">15 questions on Loss, Customer Experience and Reliability.<br>20 seconds per question. Good luck!</div>
+      <div class="player-card" id="player-card"></div>
+      <div class="start-stats">
+        <div class="stat-box"><div class="stat-num">15</div><div class="stat-lbl">Questions</div></div>
+        <div class="stat-box"><div class="stat-num">20s</div><div class="stat-lbl">Per question</div></div>
+        <div class="stat-box"><div class="stat-num">3</div><div class="stat-lbl">Modules</div></div>
+      </div>
+      <button class="btn-start" onclick="startGame()">Start Quiz</button>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="screen" id="quiz-screen">
+    <div class="top-bar">
+      <div class="progress-wrap"><div class="progress-fill" id="prog"></div></div>
+      <div class="q-counter" id="q-counter">1 / 15</div>
+      <div class="timer-box" id="timer">20s</div>
+    </div>
+    <div id="mod-tag-wrap"></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="options-grid" id="opts"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQ()" disabled>Next Question</button>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="result-screen">
+    <div class="result-inner">
+      <div class="trophy" id="trophy-icon"></div>
+      <div class="result-title" id="result-title"></div>
+      <div class="result-sub" id="result-sub"></div>
+      <div class="score-big" id="score-big"></div>
+      <div class="score-label">Your Score</div>
+      <div class="result-mini">
+        <div class="rm-box"><div class="rm-val" id="res-correct" style="color:#1a7f4b"></div><div class="rm-lbl">Correct</div></div>
+        <div class="rm-box"><div class="rm-val" id="res-wrong" style="color:#cc3333"></div><div class="rm-lbl">Wrong / Skipped</div></div>
+      </div>
+      <div class="badge-row" id="badge-row"></div>
+      <button class="replay-btn" onclick="goHome()">Play Again</button>
+    </div>
+  </div>
+
+  <!-- ADMIN LOGIN -->
+  <div class="screen" id="admin-login-screen">
+    <div class="admin-login-wrap">
+      <div class="al-title">Admin Access</div>
+      <div class="al-sub">Enter admin password to view reports</div>
+      <input class="al-input" id="admin-pass" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')checkAdminPass()">
+      <div class="al-err" id="al-err">Incorrect password. Try again.</div>
+      <button class="al-btn" onclick="checkAdminPass()">Login</button>
+      <span class="al-cancel" onclick="show('reg-screen')">Cancel</span>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD -->
+  <div class="screen" id="admin-screen">
+    <div class="admin-inner">
+      <div class="admin-header">
+        <div class="admin-title">Admin Report</div>
+        <div class="admin-close" onclick="show('reg-screen')">Exit</div>
+      </div>
+      <div class="summary-grid" id="admin-summary"></div>
+      <div class="section-head">Player Results</div>
+      <div class="tbl-wrap" id="admin-table"></div>
+      <button class="export-btn" onclick="exportCSV()">Download Report as CSV</button>
+      <button class="clear-btn" onclick="clearData()">Clear All Data</button>
+    </div>
+  </div>
+
+  <div class="fk-footer">Project ELEVATE &nbsp;·&nbsp; Flipkart Supply Chain &nbsp;·&nbsp; SB-II Region</div>
+</div>
+
+<script>
+var ADMIN_PASS = 'ELEVATE@2026';
+
+var allQ=[
+  {mod:'loss',tag:'Loss',q:'What does BRSNR stand for?',opts:['Bag Returned but Shipment Not Received','Bag Received but Shipment Not Received','Bag Reconciled but Shipment Not Reached','Bag Released but Shipment Not Registered'],ans:1},
+  {mod:'loss',tag:'Loss',q:'Which of the following is classified as a Direct Loss?',opts:['SPF Loss','Myntra Q2 Loss','BRSNR Loss','Fraud Loss'],ans:2},
+  {mod:'loss',tag:'Loss',q:'A hub holds a shipment for 12 days from the creation date. What happens?',opts:['It is automatically RTO\'d','It is marked as untraceable','It comes under Direct Loss — max ageing exceeded','It is reconnected to MH'],ans:2},
+  {mod:'loss',tag:'Loss',q:'What action prevents a shipment from falling into the Untraceable bucket?',opts:['Connect to MH immediately','Perform PRC — Physical Record Check','Raise a Genie ticket','Mark it as lost'],ans:1},
+  {mod:'loss',tag:'Loss',q:'Content Verification must be completed within how many hours for RTO/RVP shipments?',opts:['12 hours','24 hours','48 hours','72 hours'],ans:2},
+  {mod:'loss',tag:'Loss',q:'During RTO Content Verification, what must NEVER be done with mobile phones?',opts:['Take photos of the shipment','Switch them ON','Download invoice','Scan barcode'],ans:1},
+  {mod:'cx',tag:'CX',q:'What does UDBAD mean in Customer Experience metrics?',opts:['Undelivered Bad Attempt Daily','Negative feedback from customer due to fake delivery attempt','Undelivered But Attempted Delivery','Unassigned Delivery Bad Attempt'],ans:1},
+  {mod:'cx',tag:'CX',q:'What is the formula for CXNS — Customer Negative Score?',opts:['(UDBAD / Total Attempts) x 1000','(UDBAD + Wrong Delivery) / Total Attempts x 10000','(Wrong Delivery / Total OFD) x 100','(Total Contacts / Total Deliveries) x 1000'],ans:1},
+  {mod:'cx',tag:'CX',q:'What is the TAT to close a customer escalation under FK TAT SOP?',opts:['12 hours','48 hours','24 hours','72 hours'],ans:2},
+  {mod:'cx',tag:'CX',q:'L3 Escalation refers to which type of complaint?',opts:['Delay in delivery beyond 3 days','Customer contacting CS more than 3 times','Customer escalating via social media tagging leadership','Customer requesting refund without RTO'],ans:2},
+  {mod:'cx',tag:'CX',q:'What does APF stand for in ERP context?',opts:['Attempt Processing Framework','Attempt to Prioritization Framework','Allocation Planning Function','Attempt Performance Flag'],ans:1},
+  {mod:'rel',tag:'Reliability',q:'What is the formula for CPD Breach %?',opts:['(Attempted / Total CPD) x 100','(Un-attempted + closed on hub dependency / Total CPD) x 100','(Delivered / OFD) x 100','(Breach / Total OFD) x 100'],ans:1},
+  {mod:'rel',tag:'Reliability',q:'What does EMO — Early Morning OFD — measure?',opts:['Shipments delivered before noon','Shipments dispatched and assigned to WM before 10 AM','Number of WMs reporting before 8 AM','Runsheets created after 10 AM'],ans:1},
+  {mod:'rel',tag:'Reliability',q:'What is a Repromise Breach?',opts:['Shipment delivered outside working hours','Shipment missing CPD and also failing within the 48-72 hr repromise window','Shipment returned without attempt','Shipment held at hub more than 5 days'],ans:1},
+  {mod:'rel',tag:'Reliability',q:'ZRS — Zero Run Sheet — refers to:',opts:['A runsheet with zero shipments assigned','Shipments in 1 runsheet with 0% conversion','A WM who created no runsheet','A hub with zero shipments received'],ans:1},
+];
+
+var tagClass={loss:'t-loss',cx:'t-cx',rel:'t-rel'};
+var questions=[],cur=0,score=0,wrongCount=0,timerInt=null,timeLeft=20,totalTime=0,answered=false;
+var currentUser={};
+var wrongQs=[];
+
+function getRecords(){try{return JSON.parse(localStorage.getItem('elevate_records')||'[]');}catch(e){return[];}}
+function saveRecords(r){localStorage.setItem('elevate_records',JSON.stringify(r));}
+
+function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});document.getElementById(id).classList.add('active');}
+
+function registerUser(){
+  var id=document.getElementById('reg-id').value.trim();
+  var name=document.getElementById('reg-name').value.trim();
+  var hub=document.getElementById('reg-hub').value.trim();
+  var ok=true;
+  document.getElementById('err-id').style.display='none';
+  document.getElementById('err-name').style.display='none';
+  document.getElementById('err-hub').style.display='none';
+  if(!id){document.getElementById('err-id').style.display='block';ok=false;}
+  if(!name){document.getElementById('err-name').style.display='block';ok=false;}
+  if(!hub){document.getElementById('err-hub').style.display='block';ok=false;}
+  if(!ok) return;
+  currentUser={id:id,name:name,hub:hub,startTime:new Date().toLocaleString()};
+  document.getElementById('player-card').innerHTML='<strong>ID:</strong> '+id+'&nbsp;&nbsp;|&nbsp;&nbsp;<strong>Name:</strong> '+name+'&nbsp;&nbsp;|&nbsp;&nbsp;<strong>Hub:</strong> '+hub;
+  show('start-screen');
+}
+
+function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+function startGame(){
+  questions=shuffle(allQ);
+  cur=0;score=0;wrongCount=0;totalTime=0;wrongQs=[];
+  show('quiz-screen');
+  renderQ();
+}
+
+function renderQ(){
+  var q=questions[cur];
+  answered=false;
+  document.getElementById('prog').style.width=Math.round((cur/15)*100)+'%';
+  document.getElementById('q-counter').textContent=(cur+1)+' / 15';
+  document.getElementById('mod-tag-wrap').innerHTML='<span class="mod-tag '+tagClass[q.mod]+'">'+q.tag+'</span>';
+  document.getElementById('q-text').textContent=q.q;
+  var nb=document.getElementById('next-btn');
+  nb.disabled=true;
+  nb.textContent=cur===14?'See Results':'Next Question';
+  var keys=['A','B','C','D'];
+  var opts=document.getElementById('opts');
+  opts.innerHTML='';
+  q.opts.forEach(function(o,i){
+    var btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML='<span class="opt-key">'+keys[i]+'.</span><span>'+o+'</span>';
+    btn.onclick=function(){selectAns(i,btn)};
+    opts.appendChild(btn);
+  });
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerInt);timeLeft=20;updateTimer();
+  timerInt=setInterval(function(){
+    timeLeft--;totalTime++;updateTimer();
+    if(timeLeft<=0){clearInterval(timerInt);if(!answered)timeUp();}
+  },1000);
+}
+
+function updateTimer(){
+  var el=document.getElementById('timer');
+  el.textContent=timeLeft+'s';
+  if(timeLeft<=5)el.classList.add('warn');
+  else el.classList.remove('warn');
+}
+
+function selectAns(i,btn){
+  if(answered)return;
+  answered=true;clearInterval(timerInt);totalTime+=(20-timeLeft);
+  var q=questions[cur];
+  var btns=document.querySelectorAll('.opt-btn');
+  btns.forEach(function(b){b.disabled=true});
+  if(i===q.ans){
+    btn.classList.add('correct');
+    score++;
+  } else {
+    btn.classList.add('wrong');
+    wrongCount++;
+    wrongQs.push(q.q);
+  }
+  document.getElementById('next-btn').disabled=false;
+}
+
+function timeUp(){
+  answered=true;wrongCount++;
+  var q=questions[cur];
+  wrongQs.push(q.q+' [Time Up]');
+  var btns=document.querySelectorAll('.opt-btn');
+  btns.forEach(function(b){b.disabled=true});
+  document.getElementById('next-btn').disabled=false;
+}
+
+function nextQ(){cur++;if(cur>=15){showResult();return;}renderQ();}
+
+function getGrade(s){
+  if(s>=13)return'A';
+  if(s>=10)return'B';
+  if(s>=7)return'C';
+  return'D';
+}
+
+function showResult(){
+  clearInterval(timerInt);
+  var pct=Math.round((score/15)*100);
+  var grade=getGrade(score);
+  var avgTime=Math.round(totalTime/15);
+
+  var record={
+    id:currentUser.id,
+    name:currentUser.name,
+    hub:currentUser.hub,
+    date:currentUser.startTime,
+    score:score,
+    wrong:wrongCount,
+    pct:pct,
+    grade:grade,
+    avgTime:avgTime,
+    wrongQs:wrongQs.join(' | ')
+  };
+  var records=getRecords();
+  records.push(record);
+  saveRecords(records);
+
+  show('result-screen');
+  document.getElementById('score-big').textContent=score+' / 15';
+  document.getElementById('res-correct').textContent=score;
+  document.getElementById('res-wrong').textContent=wrongCount;
+
+  var title,sub,icon;
+  if(score>=13){icon='🏆';title='Outstanding!';sub='You are an Operational Hero — excellent knowledge!';}
+  else if(score>=10){icon='🥇';title='Excellent work!';sub='Strong performance — keep it up!';}
+  else if(score>=7){icon='🥈';title='Good effort!';sub='Solid base — review the missed topics.';}
+  else{icon='📚';title='Keep learning!';sub='Revisit the modules and try again!';}
+  document.getElementById('trophy-icon').textContent=icon;
+  document.getElementById('result-title').textContent=title;
+  document.getElementById('result-sub').textContent=sub;
+
+  var badgeRow=document.getElementById('badge-row');
+  badgeRow.innerHTML='';
+  if(score>=13){addBadge(badgeRow,'Top Scorer','b-gold');}
+  if(wrongCount===0){addBadge(badgeRow,'Zero Mistakes','b-green');}
+  if(avgTime<=10){addBadge(badgeRow,'Speed Master','b-blue');}
+  if(pct>=80){addBadge(badgeRow,'Operational Hero','b-gold');}
+}
+
+function addBadge(row,txt,cls){
+  var b=document.createElement('span');
+  b.className='badge '+cls;
+  b.textContent=txt;
+  row.appendChild(b);
+}
+
+function goHome(){
+  document.getElementById('reg-id').value='';
+  document.getElementById('reg-name').value='';
+  document.getElementById('reg-hub').value='';
+  show('reg-screen');
+}
+
+function showAdminLogin(){
+  document.getElementById('admin-pass').value='';
+  document.getElementById('al-err').style.display='none';
+  show('admin-login-screen');
+}
+
+function checkAdminPass(){
+  var p=document.getElementById('admin-pass').value;
+  if(p===ADMIN_PASS){
+    document.getElementById('al-err').style.display='none';
+    loadAdminDashboard();
+    show('admin-screen');
+  } else {
+    document.getElementById('al-err').style.display='block';
+  }
+}
+
+function loadAdminDashboard(){
+  var records=getRecords();
+  var total=records.length;
+  var avgScore=total?Math.round(records.reduce(function(s,r){return s+r.score;},0)/total):0;
+  var topScore=total?Math.max.apply(null,records.map(function(r){return r.score;})):0;
+  var passing=records.filter(function(r){return r.score>=10;}).length;
+
+  document.getElementById('admin-summary').innerHTML=
+    '<div class="sum-box"><div class="sum-val">'+total+'</div><div class="sum-lbl">Total players</div></div>'+
+    '<div class="sum-box"><div class="sum-val">'+avgScore+'/15</div><div class="sum-lbl">Avg score</div></div>'+
+    '<div class="sum-box"><div class="sum-val">'+passing+'</div><div class="sum-lbl">Passed (10+)</div></div>';
+
+  if(total===0){
+    document.getElementById('admin-table').innerHTML='<div class="empty-state">No records yet. Share the quiz with your team!</div>';
+    return;
+  }
+
+  var gradeClass={A:'g-a',B:'g-b',C:'g-c',D:'g-d'};
+  var rows=records.map(function(r,i){
+    return '<tr>'+
+      '<td>'+(i+1)+'</td>'+
+      '<td><strong>'+r.id+'</strong></td>'+
+      '<td>'+r.name+'</td>'+
+      '<td>'+r.hub+'</td>'+
+      '<td>'+r.date+'</td>'+
+      '<td style="text-align:center"><strong>'+r.score+'/15</strong></td>'+
+      '<td style="text-align:center">'+r.pct+'%</td>'+
+      '<td style="text-align:center"><span class="grade-pill '+gradeClass[r.grade]+'">'+r.grade+'</span></td>'+
+      '<td style="text-align:center">'+r.wrong+'</td>'+
+      '<td style="text-align:center">'+r.avgTime+'s</td>'+
+      '</tr>';
+  }).join('');
+
+  document.getElementById('admin-table').innerHTML=
+    '<table><thead><tr>'+
+    '<th>#</th><th>Emp ID</th><th>Name</th><th>Hub</th><th>Date & Time</th>'+
+    '<th>Score</th><th>%</th><th>Grade</th><th>Wrong</th><th>Avg Time</th>'+
+    '</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function exportCSV(){
+  var records=getRecords();
+  if(records.length===0){alert('No data to export.');return;}
+  var headers=['#','Emp ID','Name','Hub','Date & Time','Score','Percentage','Grade','Wrong Answers','Avg Time','Missed Questions'];
+  var rows=records.map(function(r,i){
+    return [i+1,r.id,r.name,r.hub,r.date,r.score+'/15',r.pct+'%',r.grade,r.wrong,r.avgTime+'s','"'+r.wrongQs+'"'].join(',');
+  });
+  var csv=headers.join(',')+'\n'+rows.join('\n');
+  var blob=new Blob([csv],{type:'text/csv'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='Project_ELEVATE_Results_'+new Date().toLocaleDateString().replace(/\//g,'-')+'.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearData(){
+  if(confirm('Are you sure you want to delete ALL player records? This cannot be undone.')){
+    localStorage.removeItem('elevate_records');
+    loadAdminDashboard();
+  }
+}
+</script>
+</body>
+</html>
