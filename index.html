@@ -30,7 +30,7 @@ var _origGSR=makeGSR;
 Object.defineProperty(google.script,'run',{get:function(){return makeGSR();}});
 
 function call(action,params,onOk,onFail){
-  if(!SCRIPT_URL||SCRIPT_URL==='YOUR_APPS_SCRIPT_URL_HERE'){
+  if(!SCRIPT_URL||SCRIPT_URL==='https://script.google.com/a/macros/flipkart.com/s/AKfycbxvv8QyIU9jlGY1qBpp95DOOWGBAXSVswitrgmeTqQLm9Q4B2Q02FoF6Ow1Zhr1nszR/exec'){
     alert('Please set your SCRIPT_URL in the HTML file first!');return;
   }
   fetch(SCRIPT_URL+'?action='+action,{
